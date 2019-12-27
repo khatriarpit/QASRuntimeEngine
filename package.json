@@ -1,0 +1,32 @@
+{
+  "name": "hello-cli",
+  "version": "1.0.0",
+  "description": "",
+  "main": "bin/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build-ts": "tsc",
+    "startQAS": "ts-node index.ts"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
+  "bin": {
+    "hello": "./bin/index.js"
+  },
+  "dependencies": {
+    "child_process": "^1.0.2",
+    "chromedriver": "^78.0.1",
+    "download-git-repo": "^3.0.2",
+    "express": "git+https://github.com/visionmedia/express.git",
+    "geckodriver": "^1.19.1",
+    "git-clone-repo": "^1.0.0",
+    "inquirer": "^7.0.1",
+    "properties-reader": "^0.3.1",
+    "selenium-webdriver": "^4.0.0-alpha.5",
+    "shelljs": "^0.8.3"
+  },
+  "devDependencies": {
+    "@types/node": "^12.12.11"
+  }
+}
