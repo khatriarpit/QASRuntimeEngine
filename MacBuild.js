@@ -341,7 +341,7 @@ function executeExtraCommand(path, framework, language) {
     process.chdir(path);
     console.log("Please Wait while Installing required dependencies .");
     shell.exec("npm install");
-    shell.exec("npm install -g protractor");
+    shell.exec("npm install protractor --save-dev");
     shell.exec("npm install -g tsc");
 
     if (language === 'cucumber') {
