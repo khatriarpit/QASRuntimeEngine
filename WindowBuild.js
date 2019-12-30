@@ -16,6 +16,7 @@ inquirer
 	.prompt([{
 		type: "list",
 		name: 'reptiles',
+		prefix: '>',
 		message: "Choose Project to run on QAS Runtime Engine.",
 		choices: ['local System', 'Version control', 'Quit'],
 	}])
@@ -49,6 +50,7 @@ function gitCheckout() {
 	inquirer
 		.prompt([{
 			type: "input",
+			prefix: '>',
 			name: "Choose location to store repo"
 		}])
 		.then(answers => {
@@ -74,6 +76,7 @@ function processGitClone(path) {
 	inquirer
 		.prompt([{
 			type: "input",
+			prefix: '>',
 			name: "Enter Git Clone Command"
 		}])
 		.then(answers => {
@@ -114,13 +117,24 @@ function gitCheckoutWithInquer(cmdPerform, path) {
 					shell.echo('QAS Runtime Engine requires Maven for Execution . Please install Apache Maven first .');
 					shell.exit(1);
 				}
+				if (response['java'] !== null && response['java'] === '') {
+					shell.echo('QAS Runtime Engine requires Java for Execution . Please install Java.');
+					shell.exit(1);
+				}
 				if (framework !== 'junit') {
 					loadPropertiesFromEachPath(exports.projectPath + "/resources/", true);
 				}
 				if (framework === 'junit') {
 					console.log("Please refer readme.md file in QAS for headless execution .");
+					doJavaScriptExecution(exports.projectPath, framework, language);
+				}else{
+					if(checkExistingPlatform(exports.projectPath)){
+						loadPropertiesFromEachPath(exports.projectPath + "/resources/", true);
+						doJavaScriptExecution(exports.projectPath, framework, language);
+					}else{
+						console.log("Project platform is not supported by QAS Runtime");
+					}
 				}
-				doJavaScriptExecution(exports.projectPath, framework, language);
 
 			} else if (language !== undefined && language !== '' && language === 'python') {
 				if (response['python'] !== null && response['python'] === '') {
@@ -132,14 +146,19 @@ function gitCheckoutWithInquer(cmdPerform, path) {
 					changePythonRobotProperties(exports.projectPath, true);
 					doJavaScriptExecution(exports.projectPath, framework, language);
 				} else {
-                    changePythonBehaveProperties(exports.projectPath, true);
-                    doJavaScriptExecution(exports.projectPath, framework, language);
+					if(checkExistingPlatform(exports.projectPath)){
+						changePythonBehaveProperties(exports.projectPath, true);
+						doJavaScriptExecution(exports.projectPath, framework, language);
+						}else{
+							console.log("Project platform is not supported by QAS Runtime");
+						}
 				}
 			} else if (language !== undefined && language !== '' && language === 'javascript') {
 				if (response['npm'] !== null && response['npm'] === '') {
 					shell.echo('QAS Runtime Engine requires npm for Execution . Please install npm first .');
 					shell.exit(1);
 				}
+				if(checkExistingPlatform(exports.projectPath)){
 				if (framework === 'cucumber') {
 					loadPropertiesFromEachPath(path + "/resources/", true);
 					executeExtraCommand(exports.projectPath, framework, language);
@@ -147,11 +166,15 @@ function gitCheckoutWithInquer(cmdPerform, path) {
 					changeJasminProperties(exports.projectPath, true);
 					executeExtraCommand(exports.projectPath, framework, language);
 				}
+			}else{
+				console.log("Project platform is not supported by QAS Runtime");
+			}
 			} else if (language !== undefined && language !== '' && language === 'typescript') {
 				if (response['npm'] !== null && response['npm'] === '') {
 					shell.echo('QAS Runtime Engine requires npm for Execution . Please install npm first .');
 					shell.exit(1);
 				}
+				if(checkExistingPlatform(exports.projectPath)){
 				if (framework === 'cucumber') {
 					loadPropertiesFromEachPath(exports.projectPath + "/resources/", true);
 					executeExtraCommand(exports.projectPath, framework, language);
@@ -159,6 +182,9 @@ function gitCheckoutWithInquer(cmdPerform, path) {
 					changeJasminTypeScriptProperties(exports.projectPath, true);
 					executeExtraCommand(exports.projectPath, framework, language);
 				}
+			}else{
+				console.log("Project platform is not supported by QAS Runtime");
+			}
 			} else {
 				console.log("Invalid QAS Project in given path.");
 				gitCheckout();
@@ -176,6 +202,7 @@ function checkoutFromLocalRepository() {
 	inquirer
 		.prompt([{
 			type: "input",
+			prefix: '>',
 			name: "Enter Project Path"
 		}])
 		.then(answers => {
@@ -192,6 +219,7 @@ function checkoutFromLocalRepository() {
 					console.log("QAS Runtime Engine works only for Web and Mobile Web frameworks.");
 					console.log('');
 					if (language !== undefined && language !== '' && language === 'java') {
+
 						if (response['mvn'] !== null && response['mvn'] === '') {
 							shell.echo('QAS Runtime Engine requires Maven for Execution . Please install Apache Maven first');
 							shell.exit(1);
@@ -200,16 +228,17 @@ function checkoutFromLocalRepository() {
 							shell.echo('QAS Runtime Engine requires Java for Execution . Please install Java.');
 							shell.exit(1);
 						}
-						// if (setDriver()) {
-						if (framework !== 'junit') {
-							loadPropertiesFromEachPath(path + "/resources/", true);
-						}
 						if (framework === 'junit') {
 							console.log("Please refer readme.md file in QAS for headless execution .");
+							doJavaScriptExecution(path, framework, language);
+						}else{
+							if(checkExistingPlatform(path)){
+								loadPropertiesFromEachPath(path + "/resources/", true);
+								doJavaScriptExecution(path, framework, language);
+							}else{
+								console.log("Project platform is not supported by QAS Runtime");
+							}
 						}
-
-						doJavaScriptExecution(path, framework, language);
-
 					} else if (language !== undefined && language !== '' && language === 'python') {
 						if (response['python'] !== null && response['python'] === '') {
 							shell.echo('QAS Runtime Engine requires python for Execution . Please install Python first .');
@@ -217,37 +246,47 @@ function checkoutFromLocalRepository() {
 						}
 						if (framework === 'robot') {
 							// checkPythonInstalled(exports.projectPath);
-							changePythonRobotProperties(exports.projectPath, true);
-							doJavaScriptExecution(exports.projectPath, framework, language);
+							changePythonRobotProperties(path, true);
+							doJavaScriptExecution(path, framework, language);
 						} else {
-                            changePythonBehaveProperties(exports.projectPath, true);
-                            doJavaScriptExecution(exports.projectPath, framework, language);
+							if(checkExistingPlatform(path)){
+                         	    changePythonBehaveProperties(path, true);
+								doJavaScriptExecution(path, framework, language);
+							}else{
+								console.log("Project platform is not supported by QAS Runtime");
+							}
 						}
 					} else if (language !== undefined && language !== '' && language === 'javascript') {
 						if (response['npm'] !== null && response['npm'] === '') {
 							shell.echo('QAS Runtime Engine requires npm for Execution . Please install npm first .');
 							shell.exit(1);
 						}
-						if (framework === 'cucumber') {
-							loadPropertiesFromEachPath(path + "/resources/", true);
-							executeExtraCommand(path, framework, language);
-						} else {
-							// console.log("Please refer readme.md file in QAS for headless execution .");
-							changeJasminProperties(path, true);
-							executeExtraCommand(exports.projectPath, framework, language);
-						}
+						if(checkExistingPlatform(path)){
+								if (framework === 'cucumber') {
+									loadPropertiesFromEachPath(path + "/resources/", true);
+									executeExtraCommand(path, framework, language);
+								} else {
+									changeJasminProperties(path, true);
+									executeExtraCommand(path, framework, language);
+								}
+							}else{
+									console.log("Project platform is not supported by QAS Runtime");
+								}
 					} else if (language !== undefined && language !== '' && language === 'typescript') {
 						if (response['npm'] !== null && response['npm'] === '') {
 							shell.echo('QAS Runtime Engine requires npm for Execution . Please install npm first .');
 							shell.exit(1);
 						}
-						if (framework === 'cucumber') {
-							loadPropertiesFromEachPath(path + "/resources/", true);
-							executeExtraCommand(path, framework, language);
-						} else {
-							// console.log("Please refer readme.md file in QAS for headless execution .");
-							changeJasminTypeScriptProperties(path, true);
-							executeExtraCommand(exports.projectPath, framework, language);
+						if(checkExistingPlatform(path)){
+							if (framework === 'cucumber') {
+								loadPropertiesFromEachPath(path + "/resources/", true);
+								executeExtraCommand(path, framework, language);
+							} else {
+								changeJasminTypeScriptProperties(path, true);
+								executeExtraCommand(path, framework, language);
+							}
+						}else{
+							console.log("Project platform is not supported by QAS Runtime");
 						}
 					} else {
 						console.log("It is not valid  QAS Project");
@@ -271,6 +310,7 @@ function doJavaScriptExecution(path, framework, language) {
 	inquirer
 		.prompt([{
 			type: "input",
+			prefix: '>',
 			name: "Enter ChromeDriver exe path"
 		}])
 		.then(answers => {
@@ -300,22 +340,6 @@ function executeExtraCommand(path, framework, language) {
 		}
 	}
 	executionCommandJavaScritpTypescript(path1, framework, language);
-	/* var answer = '';
-	    inquirer
-	        .prompt([{
-	            type: "input",
-	            name: "Execute command to install noded modules or write exit"
-	        }])
-	        .then(answers => {
-	            answer = answers["Execute command to install noded modules or write exit"];
-	            if (answer !== null && answer !== undefined && answer !== ''&& answer.toLowerCase()!=='exit') {
-	                shell.exec(answer);
-	                executeExtraCommand(path1,framework,language);
-	            }
-	            else {
-	                executionCommandJavaScritpTypescript(path1,framework,language);
-	            }
-	        }); */
 }
 
 function executionCommandJavaScritpTypescript(path, framework, language) {
@@ -323,25 +347,34 @@ function executionCommandJavaScritpTypescript(path, framework, language) {
 	inquirer
 		.prompt([{
 			type: "input",
+			prefix: '>',
 			name: "Enter Command for Execution"
 		}])
 		.then(answers => {
 			cmdJavaScript = answers['Enter Command for Execution'];
 			if (cmdJavaScript !== null && cmdJavaScript !== undefined && cmdJavaScript !== '') {
-				shell.exec(cmdJavaScript);
-				if (framework === "cucumber") {
-					loadPropertiesFromEachPath(path + "/resources/", false);
-				}
-				if (framework === "jasmine" && language === 'javascript') {
-					changeJasminProperties(path, false);
-				}
-				if (framework === "jasmine" && language === 'typescript') {
-					changeJasminTypeScriptProperties(path, false);
-				}
+				shell.exec(cmdJavaScript , function (err) {
+					if (err) {
+						revertJSTSModificationOfheadless(framework ,language,path);
+					}else{
+						revertJSTSModificationOfheadless(framework,language,path);
+					}
+				});
 			} else {
 				executionCommandJava(path);
 			}
 		});
+}
+function revertJSTSModificationOfheadless(framework,language,path){
+	if (framework === "cucumber" && (language ==='typescript' || language ==='javascript')) {
+		loadPropertiesFromEachPath(path + "/resources/", false);
+	}
+	if (framework === "jasmine" && language === 'javascript') {
+		changeJasminProperties(path, false);
+	}
+	if (framework === "jasmine" && language === 'typescript') {
+		changeJasminTypeScriptProperties(path, false);
+	}
 }
 
 function executionCommandJava(chromePath, framework, language) {
@@ -349,6 +382,7 @@ function executionCommandJava(chromePath, framework, language) {
 	inquirer
 		.prompt([{
 			type: "input",
+			prefix: '>',
 			name: "Enter Command for Execution"
 		}])
 		.then(answers => {
@@ -362,23 +396,40 @@ function executionCommandJava(chromePath, framework, language) {
 					shell.env["PATH"] = existingPath + ';' + chromePath;
 				}
 				if (language == 'java') {
-					shell.exec(cmdJavaScript + ' -Dwebdriver.chrome.driver=' + chromePath);
+						shell.exec(cmdJavaScript + ' -Dwebdriver.chrome.driver=' + chromePath, function (err) {
+							if (err) {
+								revertModificationOfheadless(framework ,language);
+							}else{
+								revertModificationOfheadless(framework,language);
+							}
+						});
+						
 				} else {
-					shell.exec(cmdJavaScript);
+					shell.exec(cmdJavaScript , function (err) {
+						if (err) {
+							revertModificationOfheadless(framework,language);
+						}else{
+							revertModificationOfheadless(framework,language);
+						}
+					});
 				}
-				if (framework == "robot") {
-					changePythonRobotProperties(exports.projectPath, false);
-                }
-                if (framework == "behave") {
-					changePythonBehaveProperties(exports.projectPath, false);
-				}
-				if (language === 'java' && framework !== "junit") {
-					loadPropertiesFromEachPath(path + "/resources/", false);
-				}
+				
 			} else {
-				executionCommandJava(path);
+				executionCommandJava(chromePath,framework,language);
 			}
 		});
+}
+
+function revertModificationOfheadless(framework,language){
+	if (framework == "robot") {
+		changePythonRobotProperties(exports.projectPath, false);
+	}
+	if (framework == "behave") {
+		changePythonBehaveProperties(exports.projectPath, false);
+	}
+	if (language === 'java' && framework !== "junit") {
+		loadPropertiesFromEachPath(exports.projectPath + "/resources/", false);
+	}
 }
 
 function checkDirectorySync(directory) {
@@ -391,6 +442,20 @@ function checkDirectorySync(directory) {
 }
 var user_chromedriverpath;
 
+function checkExistingPlatform(path){
+	if (checkDirectorySync(path+ '/resources/application.properties')) {
+		var properties = PropertiesReader(path + '/resources/application.properties');
+		var platformType=properties.get('platform');
+		if(platformType === 'web' || platformType === 'mobileweb'){
+				return true;
+		}else{
+			return false;
+		}
+	} else {
+		console.log("Project is Invalid .");
+		return false;
+	}
+}
 function setDriver(chrmdriver) {
 	if (checkDirectorySync(exports.projectPath + '/resources/application.properties')) {
 		var properties = PropertiesReader(exports.projectPath + '/resources/application.properties');
