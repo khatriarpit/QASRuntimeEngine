@@ -853,7 +853,12 @@ function getJavaVersion(callback) {
     });
     spawn.on('close', function (data) {
         data = result.toString().split('\n')[0].split('\r')[0];
-        var javaVersion = new RegExp('java version').test(data) ? data.split(' ')[2].replace(/"/g, '') : false;
+        var javaVersion = '';
+        if(data.indexOf('openjdk') > -1) {
+            javaVersion=new RegExp('openjdk version').test(data) ? data.split(' ')[2].replace(/"/g, '') : false;
+        }else{
+            javaVersion=new RegExp('java version').test(data) ? data.split(' ')[2].replace(/"/g, '') : false;
+        }
         if (javaVersion !== false) {
             return callback(null, javaVersion);
         }
