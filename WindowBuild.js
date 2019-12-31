@@ -166,7 +166,7 @@ function gitCheckoutWithInquer(cmdPerform, path) {
 				}
 				if(checkExistingPlatform(exports.projectPath)){
 				if (framework === 'cucumber') {
-					loadPropertiesFromEachPath(path + "/resources/", true);
+					loadPropertiesFromEachPathTSJS(path + "/resources/", true);
 					executeExtraCommand(exports.projectPath, framework, language);
 				} else {
 					changeJasminProperties(exports.projectPath, true);
@@ -182,7 +182,7 @@ function gitCheckoutWithInquer(cmdPerform, path) {
 				}
 				if(checkExistingPlatform(exports.projectPath)){
 				if (framework === 'cucumber') {
-					loadPropertiesFromEachPath(exports.projectPath + "/resources/", true);
+					loadPropertiesFromEachPathTSJS(exports.projectPath + "/resources/", true);
 					executeExtraCommand(exports.projectPath, framework, language);
 				} else {
 					changeJasminTypeScriptProperties(exports.projectPath, true);
@@ -275,7 +275,7 @@ function checkoutFromLocalRepository() {
 						}
 						if(checkExistingPlatform(path)){
 								if (framework === 'cucumber') {
-									loadPropertiesFromEachPath(path + "/resources/", true);
+									loadPropertiesFromEachPathTSJS(path + "/resources/", true);
 									executeExtraCommand(path, framework, language);
 								} else {
 									changeJasminProperties(path, true);
@@ -291,7 +291,7 @@ function checkoutFromLocalRepository() {
 						}
 						if(checkExistingPlatform(path)){
 							if (framework === 'cucumber') {
-								loadPropertiesFromEachPath(path + "/resources/", true);
+								loadPropertiesFromEachPathTSJS(path + "/resources/", true);
 								executeExtraCommand(path, framework, language);
 							} else {
 								changeJasminTypeScriptProperties(path, true);
@@ -394,7 +394,7 @@ function executionCommandJavaScritpTypescript(path, framework, language) {
 }
 function revertJSTSModificationOfheadless(framework,language,path){
 	if (framework === "cucumber" && (language ==='typescript' || language ==='javascript')) {
-		loadPropertiesFromEachPath(path + "/resources/", false);
+		loadPropertiesFromEachPathTSJS(path + "/resources/", false);
 	}
 	if (framework === "jasmine" && language === 'javascript') {
 		changeJasminProperties(path, false);
@@ -666,7 +666,47 @@ function changeJasminTypeScriptProperties(path, isSave) {
 		}
 	});
 }
-
+function loadPropertiesFromEachPathTSJS(path, isSave) {
+	var platforms = ['web', 'mobileweb'];
+	platforms.forEach(function (element) {
+		var platformDir = path + "/" + element + "/";
+		if (fs.existsSync(platformDir)) {
+			fs.readdirSync(platformDir).forEach(function (file) {
+				if (file.search("env.properties") !== -1) {
+					var property = new PropertiesReader(platformDir + "env.properties");
+					var objectValueMap = property.getAllProperties();
+					var scaps = objectValueMap['chrome.additional.capabilities'].toString().replace(/\\/g, "");
+					objectValueMap['chrome.additional.capabilities'] = JSON.parse(scaps);
+					if (isSave) {
+						if (Object.keys(objectValueMap['chrome.additional.capabilities']).length === 0) {
+							objectValueMap['chrome.additional.capabilities'] = {
+								chromeOptions: {
+									args: ['--headless']
+								}
+							};
+						} else {
+							objectValueMap['chrome.additional.capabilities']['chromeOptions']['args'] = ["--headless"];
+						}
+					} else {
+						if (element !== 'mobileweb') {
+							delete objectValueMap['chrome.additional.capabilities'].chromeOptions;
+						} else {
+							delete objectValueMap['chrome.additional.capabilities']['chromeOptions']['args'] ;
+						}
+					}
+					var str = '';
+					for (var i in objectValueMap) {
+						var key = typeof objectValueMap[i] === 'object' ? JSON.stringify(objectValueMap[i]) : objectValueMap[i];
+						str += i + '=' + key + '\n';
+					}
+					saveEnvFile(str, platformDir + "env.properties", function (fileRes) {
+						console.log(fileRes);
+					});
+				}
+			});
+		}
+	});
+}
 function loadPropertiesFromEachPath(path, isSave) {
 	var platforms = ['web', 'mobileweb'];
 	platforms.forEach(function (element) {
