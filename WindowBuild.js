@@ -113,11 +113,11 @@ function gitCheckoutWithInquer(cmdPerform, path) {
 			console.log('');
 			if (language !== undefined && language !== '' && language === 'java') {
 				// if (setDriver()) {
-				if (response['mvn'] !== null && response['mvn'] === '') {
+				if (response['mvn'] === null || response['mvn'] === '' || response['mvn'] =='undefined') {
 					shell.echo('QAS Runtime Engine requires Maven for Execution . Please install Apache Maven first .');
 					shell.exit(1);
 				}
-				if (response['java'] !== null && response['java'] === '') {
+				if (response['java'] === null || response['java'] === '' ||  response['java'] === 'undefined') {
 					shell.echo('QAS Runtime Engine requires Java for Execution . Please install Java.');
 					shell.exit(1);
 				}
@@ -137,11 +137,11 @@ function gitCheckoutWithInquer(cmdPerform, path) {
 				}
 
 			} else if (language !== undefined && language !== '' && language === 'python') {
-				if (response['python'] !== null && response['python'] === '') {
+				if (response['python'] === null || response['python'] === '' || response['python'] === 'undefined') {
 					shell.echo('QAS Runtime Engine requires python for Execution . Please install Python first .');
 					shell.exit(1);
 				}
-				if (response['pip'] !== null && response['pip'] === '') {
+				if (response['pip'] === null || response['pip'] === '' || response['pip'] === 'undefined') {
 					shell.echo('QAS Runtime Engine requires pip for python Execution . Please install pip first .');
 					shell.exit(1);
 				}
@@ -160,7 +160,7 @@ function gitCheckoutWithInquer(cmdPerform, path) {
 						}
 				}
 			} else if (language !== undefined && language !== '' && language === 'javascript') {
-				if (response['npm'] !== null && response['npm'] === '') {
+				if (response['npm'] === null || response['npm'] === '' || response['npm'] === 'undefined') {
 					shell.echo('QAS Runtime Engine requires npm for Execution . Please install npm first .');
 					shell.exit(1);
 				}
@@ -176,7 +176,7 @@ function gitCheckoutWithInquer(cmdPerform, path) {
 				console.log("Project platform is not supported by QAS Runtime");
 			}
 			} else if (language !== undefined && language !== '' && language === 'typescript') {
-				if (response['npm'] !== null && response['npm'] === '') {
+				if (response['npm'] !== null || response['npm'] === '' || response['npm'] === 'undefined') {
 					shell.echo('QAS Runtime Engine requires npm for Execution . Please install npm first .');
 					shell.exit(1);
 				}
@@ -226,11 +226,11 @@ function checkoutFromLocalRepository() {
 					console.log('');
 					if (language !== undefined && language !== '' && language === 'java') {
 
-						if (response['mvn'] !== null && response['mvn'] === '') {
+						if (response['mvn'] === null || response['mvn'] === '' || response['mvn'] === 'undefined') {
 							shell.echo('QAS Runtime Engine requires Maven for Execution . Please install Apache Maven first');
 							shell.exit(1);
                         }
-                        if (response['java'] !== null && response['java'] === '') {
+                        if (response['java'] === null || response['java'] === '' || response['java'] === 'undefined') {
 							shell.echo('QAS Runtime Engine requires Java for Execution . Please install Java.');
 							shell.exit(1);
 						}
@@ -246,11 +246,11 @@ function checkoutFromLocalRepository() {
 							}
 						}
 					} else if (language !== undefined && language !== '' && language === 'python') {
-						if (response['python'] !== null && response['python'] === '') {
+						if (response['python'] === null || response['python'] === '' || response['python'] === 'undefined') {
 							shell.echo('QAS Runtime Engine requires python for Execution . Please install Python first .');
 							shell.exit(1);
 						}
-						if (response['pip'] !== null && response['pip'] === '') {
+						if (response['pip'] === null || response['pip'] === '' || response['pip'] === 'undefined') {
 							shell.echo('QAS Runtime Engine requires pip for python Execution . Please install pip first .');
 							shell.exit(1);
 						}
@@ -269,7 +269,7 @@ function checkoutFromLocalRepository() {
 							}
 						}
 					} else if (language !== undefined && language !== '' && language === 'javascript') {
-						if (response['npm'] !== null && response['npm'] === '') {
+						if (response['npm'] === null || response['npm'] === '' || response['npm'] === 'undefined') {
 							shell.echo('QAS Runtime Engine requires npm for Execution . Please install npm first .');
 							shell.exit(1);
 						}
@@ -285,7 +285,7 @@ function checkoutFromLocalRepository() {
 									console.log("Project platform is not supported by QAS Runtime");
 								}
 					} else if (language !== undefined && language !== '' && language === 'typescript') {
-						if (response['npm'] !== null && response['npm'] === '') {
+						if (response['npm'] === null || response['npm'] === '' || response['npm'] === 'undefined') {
 							shell.echo('QAS Runtime Engine requires npm for Execution . Please install npm first .');
 							shell.exit(1);
 						}
@@ -844,7 +844,7 @@ function getJavaVersion(callback) {
 	var result = '';
 	var callbackdone = false;
 	spawn.on('error', function (err) {
-		console.log('Oh noez, teh errurz: ' + err);
+		// console.log('Oh noez, teh errurz: ' + err);
 		if (!callbackdone) {
 			callbackdone = true;
 			return callback(null, null);
@@ -881,7 +881,7 @@ function getNodeVersion(callback) {
 			return callback(null, result);
 		});
 		child.on('error', function (err) {
-			console.log('Oh noez, teh errurz: ' + err);
+			// console.log('Oh noez, teh errurz: ' + err);
 			return callback(null, null);
 		});
 	} catch (error) {
@@ -991,7 +991,7 @@ function getNpmVersion(callback) {
 				}
 			});
 			spawn_4.on('error', function (err) {
-				console.log('Oh noez, teh errurz: ' + err);
+				// console.log('Oh noez, teh errurz: ' + err);
 				if (!isCallBackDone) {
 					isCallBackDone = true;
 					return callback(null, null);
@@ -1015,7 +1015,7 @@ function getNpmVersion(callback) {
 				}
 			});
 			spawn_5.on('error', function (err) {
-				console.log('Oh noez, teh errurz: ' + err);
+				// console.log('Oh noez, teh errurz: ' + err);
 				if (!isCallBackDone) {
 					isCallBackDone = true;
 					return callback(null, null);
@@ -1031,7 +1031,7 @@ function getNpmVersion(callback) {
 					return callback(null, data);
 				});
 				spawn_6.on('error', function (err) {
-					console.log('Oh noez, teh errurz: ' + err);
+					// console.log('Oh noez, teh errurz: ' + err);
 					return callback(null, null);
 				});
 			} catch (error) {
@@ -1052,7 +1052,7 @@ function getMvnVersion(callback) {
 			var result = '';
 			var callbackdone = false;
 			spawn_7.on('error', function (err) {
-				console.log('Oh noez, teh errurz: ' + err);
+				// console.log('Oh noez, teh errurz: ' + err);
 				if (!callbackdone) {
 					callbackdone = true;
 					return callback(null, null);
@@ -1069,7 +1069,7 @@ function getMvnVersion(callback) {
 				}
 			});
 		} else if (process.platform === 'win32') {
-			var spawn_8 = require('child_process').spawn('cmd.exe', ['/c', 'mvn -version']);
+			var spawn_8 = require('child_process').spawn('cmd.exe', ['/c', 'mvn --version']);
 			var callbackdone = false;
 			spawn_8.on('error', function (err) {
 				if (!callbackdone) {
@@ -1109,7 +1109,7 @@ function getMvnVersion(callback) {
 				return callback(null, data);
 			});
 			spawn_9.on('error', function (err) {
-				console.log('Oh noez, teh errurz:mvn: ' + err);
+				// console.log('Oh noez, teh errurz:mvn: ' + err);
 				return callback(null, null);
 			});
 		}
@@ -1124,7 +1124,7 @@ function getAdbVersion(callback) {
 		var spawn_10 = require('child_process').spawn('adb', ['--version']);
 		var isCallBackDone = false;
 		spawn_10.on('error', function (err) {
-			console.log('Oh noez, teh errurz:adb: ' + err);
+			// console.log('Oh noez, teh errurz:adb: ' + err);
 			if (!isCallBackDone) {
 				isCallBackDone = true;
 				return callback(err, null);
