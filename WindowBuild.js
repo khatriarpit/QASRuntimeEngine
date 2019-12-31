@@ -141,14 +141,20 @@ function gitCheckoutWithInquer(cmdPerform, path) {
 					shell.echo('QAS Runtime Engine requires python for Execution . Please install Python first .');
 					shell.exit(1);
 				}
+				if (response['pip'] !== null && response['pip'] === '') {
+					shell.echo('QAS Runtime Engine requires pip for python Execution . Please install pip first .');
+					shell.exit(1);
+				}
 				if (framework === 'robot') {
 					// checkPythonInstalled(exports.projectPath);
 					changePythonRobotProperties(exports.projectPath, true);
-					doJavaScriptExecution(exports.projectPath, framework, language);
+					executePythonExtraCommand(exports.projectPath,framework,language);
+					// doJavaScriptExecution(exports.projectPath, framework, language);
 				} else {
 					if(checkExistingPlatform(exports.projectPath)){
 						changePythonBehaveProperties(exports.projectPath, true);
-						doJavaScriptExecution(exports.projectPath, framework, language);
+						executePythonExtraCommand(exports.projectPath,framework,language);
+						// doJavaScriptExecution(exports.projectPath, framework, language);
 						}else{
 							console.log("Project platform is not supported by QAS Runtime");
 						}
@@ -244,14 +250,20 @@ function checkoutFromLocalRepository() {
 							shell.echo('QAS Runtime Engine requires python for Execution . Please install Python first .');
 							shell.exit(1);
 						}
+						if (response['pip'] !== null && response['pip'] === '') {
+							shell.echo('QAS Runtime Engine requires pip for python Execution . Please install pip first .');
+							shell.exit(1);
+						}
 						if (framework === 'robot') {
 							// checkPythonInstalled(exports.projectPath);
 							changePythonRobotProperties(path, true);
-							doJavaScriptExecution(path, framework, language);
+							executePythonExtraCommand(path,framework,language);
+							// doJavaScriptExecution(path, framework, language);
 						} else {
 							if(checkExistingPlatform(path)){
-                         	    changePythonBehaveProperties(path, true);
-								doJavaScriptExecution(path, framework, language);
+								 changePythonBehaveProperties(path, true);
+								 executePythonExtraCommand(path,framework,language);
+								// doJavaScriptExecution(path, framework, language);
 							}else{
 								console.log("Project platform is not supported by QAS Runtime");
 							}
@@ -340,6 +352,21 @@ function executeExtraCommand(path, framework, language) {
 		}
 	}
 	executionCommandJavaScritpTypescript(path1, framework, language);
+}
+function executePythonExtraCommand(path, framework, language) {
+	var pythonVersion=response['python'];
+	var pipalias='';
+	if(pythonVersion.substring(0, 1)=== '3'){
+		pipalias='3';
+	}
+	process.chdir(path);
+	console.log("Please Wait .Installing required dependencies .");
+	shell.exec("pip"+pipalias +" install -r requirements.txt");
+	if(framework === 'robot'){
+		shell.exec("pip"+pipalias +" install robotframework");
+		shell.exec("pip"+pipalias +" install robotframework-appiumlibrary");
+	}
+	doJavaScriptExecution(path, framework, language);
 }
 
 function executionCommandJavaScritpTypescript(path, framework, language) {
