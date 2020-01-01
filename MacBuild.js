@@ -434,6 +434,15 @@ function executionCommandJava(chromePath, framework, language) {
                 var existingPath = shell.exec("echo $PATH");
                 shell.env["PATH"] = existingPath + ':' + chromePath;
                 // shell.exec(cmdJavaScript);
+                if(language==='java'){
+                shell.exec(cmdJavaScript + ' -Dwebdriver.chrome.driver=' +chromePath, function (err) {
+                    if (err) {
+                        revertModificationOfheadless(framework,language);
+                    }else{
+                        revertModificationOfheadless(framework,language);
+                    }
+                });
+            }else{
                 shell.exec(cmdJavaScript , function (err) {
                     if (err) {
                         revertModificationOfheadless(framework,language);
@@ -441,6 +450,7 @@ function executionCommandJava(chromePath, framework, language) {
                         revertModificationOfheadless(framework,language);
                     }
                 });
+            }
             } else {
                 executionCommandJava(path);
             }
