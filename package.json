@@ -17,6 +17,7 @@
   "dependencies": {
     "child_process": "^1.0.2",
     "chromedriver": "^78.0.1",
+    "cron": "^1.7.2",
     "download-git-repo": "^3.0.2",
     "express": "git+https://github.com/visionmedia/express.git",
     "geckodriver": "^1.19.1",

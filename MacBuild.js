@@ -6,7 +6,7 @@ var fs = require('fs');
 const exec = require('child_process').exec;
 var chromedriverpath;
 var pathObject = require("path");
-
+var CronJob = require('cron').CronJob;
 var inquirer = require('inquirer');
 var inputProjectMode;
 var os = require('os');
@@ -556,9 +556,9 @@ function changePythonBehaveProperties(path, isSave) {
                     objectValueMap['chrome.additional.capabilities'] = JSON.parse(scaps);
                     if (isSave) {
                         if (element !== 'mobileweb') {
-                            objectValueMap['chrome.additional.capabilities']={'goog:chromeOptions': {args: ['--headless', '--disable-gpu']}};
+                            objectValueMap['chrome.additional.capabilities']={'goog:chromeOptions': {args: ['--headless','--no-sandbox','--disable-dev-shm-usage','--disable-gpu']}};
                         }else{
-                            objectValueMap['chrome.additional.capabilities']={"goog:chromeOptions": {"mobileEmulation":{"deviceName":"Pixel 2"},"args": ["--headless", "--disable-gpu"]}};
+                            objectValueMap['chrome.additional.capabilities']={"goog:chromeOptions": {"mobileEmulation":{"deviceName":"Pixel 2"},"args": ["--headless", "--disable-gpu","--no-sandbox","--disable-dev-shm-usage"]}};
                         }
                     } else {
                         if (element !== 'mobileweb') {
@@ -609,14 +609,14 @@ function changePythonRobotProperties(path, isSave) {
         if (fs.existsSync(platformDir)) {
             if (isSave) {
                 if (element === 'mobileweb') {
-                    fs.writeFileSync(platformDir + "/step_definitions.robot", fs.readFileSync(platformDir + "/step_definitions.robot", 'utf8').replace("${options}=         Get Chrome Mobile Options", ' ${options}=         Get Chrome Mobile Options \n  Call Method    ${options}    add_argument    --headless'));
+                    fs.writeFileSync(platformDir + "/step_definitions.robot", fs.readFileSync(platformDir + "/step_definitions.robot", 'utf8').replace("${options}=         Get Chrome Mobile Options", ' ${options}=         Get Chrome Mobile Options \n  Call Method    ${options}    add_argument    --headless \n  Call Method    ${options}    add_argument    --disable-gpu \n  Call Method    ${options}    add_argument    --no-sandbox \n  Call Method    ${options}    add_argument    --disable-dev-shm-usage'));
                 } else {
                     fs.writeFileSync(platformDir + "/step_definitions.robot", fs.readFileSync(platformDir + "/step_definitions.robot", 'utf8').replace(" ${BROWSER}", 'headlesschrome'));
                 }
             }
             else {
                 if (element === 'mobileweb') {
-                    fs.writeFileSync(platformDir + "/step_definitions.robot", fs.readFileSync(platformDir + "/step_definitions.robot", 'utf8').replace("  Call Method    ${options}    add_argument    --headless", ''));
+                    fs.writeFileSync(platformDir + "/step_definitions.robot", fs.readFileSync(platformDir + "/step_definitions.robot", 'utf8').replace("  Call Method    ${options}    add_argument    --headless \n  Call Method    ${options}    add_argument    --disable-gpu \n  Call Method    ${options}    add_argument    --no-sandbox \n  Call Method    ${options}    add_argument    --disable-dev-shm-usage", ''));
                 } else {
                     fs.writeFileSync(platformDir + "/step_definitions.robot", fs.readFileSync(platformDir + "/step_definitions.robot", 'utf8').replace("headlesschrome", ' ${BROWSER}'));
                 }
@@ -631,15 +631,15 @@ function changeJasminProperties(path, isSave) {
         if (fs.existsSync(platformDir)) {
             if (isSave) {
                 if (element === 'web') {
-                    fs.writeFileSync(platformDir + "/env.js", fs.readFileSync(platformDir + "/env.js", 'utf8').replace("browserName: 'chrome'","browserName: 'chrome',\n chromeOptions: {\n args: [\"--headless\"]\n}"));
+                	fs.writeFileSync(platformDir + "/env.js", fs.readFileSync(platformDir + "/env.js", 'utf8').replace("browserName: 'chrome'","browserName: 'chrome',\n chromeOptions: {\n args: [\"--headless\",\"--no-sandbox\",\"--disable-dev-shm-usage\"]\n}"));
                 } else {
-                fs.writeFileSync(platformDir + "/env.js", fs.readFileSync(platformDir + "/env.js", 'utf8').replace("'chromeOptions':{'mobileEmulation':{'deviceName':'iPhone X'}}", "'chromeOptions':{'mobileEmulation':{'deviceName':'iPhone X'},args:[\"--headless\"]}"));
+                    fs.writeFileSync(platformDir + "/env.js", fs.readFileSync(platformDir + "/env.js", 'utf8').replace("'chromeOptions':{'mobileEmulation':{'deviceName':'iPhone X'}}", "'chromeOptions':{'mobileEmulation':{'deviceName':'iPhone X'},args:[\"--headless\",\"--no-sandbox\",\"--disable-dev-shm-usage\"]}"));
                 }
             } else {
                 if (element === 'web') {
-                    fs.writeFileSync(platformDir + "/env.js", fs.readFileSync(platformDir + "/env.js", 'utf8').replace("browserName: 'chrome',\n chromeOptions: {\n args: [\"--headless\"]\n}","browserName: 'chrome'"));
-                } else {
-                fs.writeFileSync(platformDir + "/env.js", fs.readFileSync(platformDir + "/env.js", 'utf8').replace( "'chromeOptions':{'mobileEmulation':{'deviceName':'iPhone X'},args:[\"--headless\"]}","'chromeOptions':{'mobileEmulation':{'deviceName':'iPhone X'}}"));
+					fs.writeFileSync(platformDir + "/env.js", fs.readFileSync(platformDir + "/env.js", 'utf8').replace("browserName: 'chrome',\n chromeOptions: {\n args: [\"--headless\",\"--no-sandbox\",\"--disable-dev-shm-usage\"]\n}","browserName: 'chrome'"));
+				} else {
+                fs.writeFileSync(platformDir + "/env.js", fs.readFileSync(platformDir + "/env.js", 'utf8').replace( "'chromeOptions':{'mobileEmulation':{'deviceName':'iPhone X'},args:[\"--headless\",\"--no-sandbox\",\"--disable-dev-shm-usage\"]}","'chromeOptions':{'mobileEmulation':{'deviceName':'iPhone X'}}"));
                 }
             }
         }
@@ -652,15 +652,15 @@ function changeJasminTypeScriptProperties(path, isSave) {
         if (fs.existsSync(platformDir)) {
             if (isSave) {
                 if (element === 'web') {
-                    fs.writeFileSync(platformDir + "/env.ts", fs.readFileSync(platformDir + "/env.ts", 'utf8').replace("browserName: 'chrome'","browserName: 'chrome',\n chromeOptions: {\n args: [\"--headless\"]\n}"));
-                } else {
-                fs.writeFileSync(platformDir + "/env.ts", fs.readFileSync(platformDir + "/env.ts", 'utf8').replace("'chromeOptions':{'mobileEmulation':{'deviceName':'iPhone X'}}", "'chromeOptions':{'mobileEmulation':{'deviceName':'iPhone X'},args:[\"--headless\"]}"));
+					fs.writeFileSync(platformDir + "/env.ts", fs.readFileSync(platformDir + "/env.ts", 'utf8').replace("browserName: 'chrome'","browserName: 'chrome',\n chromeOptions: {\n args: [\"--headless\",\"--no-sandbox\",\"--disable-dev-shm-usage\"]\n}"));
+				} else {
+                fs.writeFileSync(platformDir + "/env.ts", fs.readFileSync(platformDir + "/env.ts", 'utf8').replace("'chromeOptions':{'mobileEmulation':{'deviceName':'iPhone X'}}", "'chromeOptions':{'mobileEmulation':{'deviceName':'iPhone X'},args:[\"--headless\",\"--no-sandbox\",\"--disable-dev-shm-usage\"]}"));
                 }
             } else {
                 if (element === 'web') {
-                    fs.writeFileSync(platformDir + "/env.ts", fs.readFileSync(platformDir + "/env.ts", 'utf8').replace("browserName: 'chrome',\n chromeOptions: {\n args: [\"--headless\"]\n}","browserName: 'chrome'"));
-                } else {
-                fs.writeFileSync(platformDir + "/env.ts", fs.readFileSync(platformDir + "/env.ts", 'utf8').replace( "'chromeOptions':{'mobileEmulation':{'deviceName':'iPhone X'},args:[\"--headless\"]}","'chromeOptions':{'mobileEmulation':{'deviceName':'iPhone X'}}"));
+					fs.writeFileSync(platformDir + "/env.ts", fs.readFileSync(platformDir + "/env.ts", 'utf8').replace("browserName: 'chrome',\n chromeOptions: {\n args: [\"--headless\",\"--no-sandbox\",\"--disable-dev-shm-usage\"]\n}","browserName: 'chrome'"));
+				} else {
+                fs.writeFileSync(platformDir + "/env.ts", fs.readFileSync(platformDir + "/env.ts", 'utf8').replace( "'chromeOptions':{'mobileEmulation':{'deviceName':'iPhone X'},args:[\"--headless\",\"--no-sandbox\",\"--disable-dev-shm-usage\"]}","'chromeOptions':{'mobileEmulation':{'deviceName':'iPhone X'}}"));
                 }
                 //fs.writeFileSync(platformDir + "/env.ts", fs.readFileSync(platformDir + "/env.ts", 'utf8').replace("--headless", "mode"));
             }
@@ -682,12 +682,12 @@ function loadPropertiesFromEachPathTSJS(path, isSave) {
                         if (Object.keys(objectValueMap['chrome.additional.capabilities']).length === 0) {
                             objectValueMap['chrome.additional.capabilities'] = {
                                 chromeOptions: {
-                                    args: ['--headless']
+                                    args: ['--headless','--no-sandbox','--disable-dev-shm-usage']
                                 }
                             };
                         }
                         else {
-                            objectValueMap['chrome.additional.capabilities']['chromeOptions']['args'] = ["--headless"];
+                            objectValueMap['chrome.additional.capabilities']['chromeOptions']['args'] = ["--headless","--no-sandbox","--disable-dev-shm-usage"];
                         }
                     }
                     else {
@@ -725,19 +725,19 @@ function loadPropertiesFromEachPath(path, isSave) {
                         if (Object.keys(objectValueMap['chrome.additional.capabilities']).length === 0) {
                             objectValueMap['chrome.additional.capabilities'] = {
                                 chromeOptions: {
-                                    args: ['--headless']
+                                    args: ['--headless','--no-sandbox','--disable-dev-shm-usage']
                                 }
                             };
                         }
                         else {
-                            objectValueMap['chrome.additional.capabilities']['chromeOptions']['args'] = ["--headless"];
+                            objectValueMap['chrome.additional.capabilities']['chromeOptions']['args'] = ["--headless","--no-sandbox","--disable-dev-shm-usage"];
                         }
                     }
                     else {
                         if (element !== 'mobileweb') {
                             delete objectValueMap['chrome.additional.capabilities'].chromeOptions;
                         } else {
-                            objectValueMap['chrome.additional.capabilities']['chromeOptions']['args'] = [""];
+                            delete objectValueMap['chrome.additional.capabilities']['chromeOptions']['args'] ;
                         }
                     }
                     var str = '';
@@ -1191,3 +1191,44 @@ function getAdbVersion(callback) {
     }
 }
 exports.getAdbVersion = getAdbVersion;
+
+function askForScheduing(cmd,chrmdriverPath,language,framework){
+    inquirer
+		.prompt([{
+            type: "input",
+            name: 'reptiles',
+			prefix: '>',
+            name: "Do you want to schedule execution?",
+            choices: ['Yes', 'No']
+		}])
+		.then(answers => {
+            var input= answers.reptiles;
+            if(input=='No'){
+                shell.exit(1);
+            }else{
+                inquirer
+                .prompt([{
+                    type: "input",
+                    prefix: '>',
+                    name: "Enter Cron Pattern "
+                }])
+                .then(answers => {
+                    var cronPattern = '';
+                    cronPattern = answers["Enter Cron Pattern "];
+                    if (cronPattern !== undefined && cronPattern !== '' && cronPattern !== null) {
+						new CronJob(cronPattern, function() {
+						}, null, true, 'America/Los_Angeles');
+						// shell.exec(cmdJavaScript + ' -Dwebdriver.chrome.driver=' + chromePath, function (err) {
+						// 	if (err) {
+						// 		revertModificationOfheadless(framework ,language);
+						// 	}else{
+						// 		askForScheduing(cmdJavaScript,chromePath,language,framework);
+						// 		revertModificationOfheadless(framework,language);
+						// 	}
+                    }
+                });
+
+            }
+        });
+
+    }
