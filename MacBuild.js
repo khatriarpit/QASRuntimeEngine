@@ -161,7 +161,7 @@ function gitCheckoutWithInquer(cmdPerform, path) {
                             }
                     }
                 }else if (language !== undefined && language !== '' && language === 'javascript') {
-				if (response['npm'] !== null || response['npm'] === '' || response['npm'] === 'undefined') {
+				if (response['npm'] === null || response['npm'] === '' || response['npm'] === 'undefined') {
                         shell.echo('QAS Runtime Engine requires npm for Execution . Please install npm first .');
                         shell.exit(1);
                     }
@@ -177,7 +177,7 @@ function gitCheckoutWithInquer(cmdPerform, path) {
                     console.log("Project platform is not supported by QAS Runtime");
                 }
                 }else if (language !== undefined && language !== '' && language === 'typescript') {
-				if (response['npm'] !== null || response['npm'] === '' || response['npm'] === 'undefined') {
+				if (response['npm'] === null || response['npm'] === '' || response['npm'] === 'undefined') {
                         shell.echo('QAS Runtime Engine requires npm for Execution . Please install npm first .');
                         shell.exit(1);
                     }
@@ -292,7 +292,7 @@ function checkoutFromLocalRepository() {
                     }
                     }
                     else if (language !== undefined && language !== '' && language === 'typescript') {
-                        if (response['npm'] !== null || response['npm'] === '' || response['npm'] === 'undefined') {
+                        if (response['npm'] === null || response['npm'] === '' || response['npm'] === 'undefined') {
                             shell.echo('QAS Runtime Engine requires npm for Execution . Please install npm first .');
                             shell.exit(1);
                         }
