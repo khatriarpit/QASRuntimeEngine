@@ -343,12 +343,12 @@ function executeExtraCommand(path, framework, language) {
 	shell.exec("npm install");
 	shell.exec("npm install protractor --save-dev");
 	shell.exec("npm install -g tsc");
-	if (language === 'cucumber') {
+	if (framework === 'cucumber') {
 		shell.exec("npm run webdriver-update"); //cucumber
 	}
-	if (language === 'jasmine') {
+	if (framework === 'jasmine') {
 		shell.exec("npm run prepare"); //jasmine
-		if (framework == 'typescript') {
+		if (language == 'typescript') {
 			shell.exec("npm run build"); //typeJasmin
 		}
 	}
