@@ -51,14 +51,14 @@ function gitCheckout() {
         .prompt([{
             type: "input",
             prefix: '>',
-            name: "Choose location to store repo"
+            name: "Choose location to store repository"
         }])
         .then(answers => {
-            path = answers["Choose location to store repo"];
+            path = answers["Choose location to store repository"];
             if (path !== undefined && path !== '' && path !== null) {
                 path = path.trim().replace(/\\/g, "");
                 if (checkDirectorySync(path)) {
-                    console.log("Example : git clone repoURL");
+                    console.log("Example : git clone RepositoryURL");
                     processGitClone(path);
                 } else {
                     console.log('QAS Runtime Engine can\'t find the path specified.');
