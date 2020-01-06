@@ -329,7 +329,7 @@ function doJavaScriptExecution(path, framework, language) {
 		.then(answers => {
 			chromePath = answers["Enter ChromeDriver exe path"];
 			if (chromePath !== null && chromePath !== undefined && chromePath !== '') {
-				executionCommandJava(chromePath, framework, language);
+				executionCommandJava(path,chromePath, framework, language);
 			} else {
 				doJavaScriptExecution(path, framework, language);
 			}
@@ -389,7 +389,7 @@ function executionCommandJavaScritpTypescript(path, framework, language) {
 					}
 				});
 			} else {
-				executionCommandJava(path);
+				executionCommandJavaScritpTypescript(path,framework,language);
 			}
 		});
 }
@@ -405,7 +405,7 @@ function revertJSTSModificationOfheadless(framework,language,path){
 	}
 }
 
-function executionCommandJava(chromePath, framework, language) {
+function executionCommandJava(path ,chromePath, framework, language) {
 	var cmdJavaScript = '';
 	inquirer
 		.prompt([{
@@ -424,16 +424,39 @@ function executionCommandJava(chromePath, framework, language) {
 					shell.env["PATH"] = existingPath + ';' + chromePath;
 				}
 				if (language == 'java') {
+					// mvn  -Dtest=tests.web.*.*Test,tests.mobileweb.*.*Test  site
+					if(framework==='junit'){
+						// console.log('mvn  -Dtest=tests.web.*.*Test,tests.mobileweb.*.*Test -Dwebdriver.chrome.driver=' + chromePath + " site");
+						shell.exec('mvn  -Dtest=tests.web.*.*Test,tests.mobileweb.*.*Test -Dwebdriver.chrome.driver=' + chromePath + " site", function (err) {
+							if (err) {
+								revertModificationOfheadless(framework ,language);
+							}else{
+								// askForScheduing(cmdJavaScript,chromePath,language,framework);
+								revertModificationOfheadless(framework,language);
+							}
+						});
+					}else{
 						shell.exec(cmdJavaScript + ' -Dwebdriver.chrome.driver=' + chromePath, function (err) {
 							if (err) {
 								revertModificationOfheadless(framework ,language);
 							}else{
-								//askForScheduing(cmdJavaScript,chromePath,language,framework);
+								// askForScheduing(cmdJavaScript,chromePath,language,framework);
 								revertModificationOfheadless(framework,language);
 							}
 						});
+					}
 						
 				} else {
+					if(framework==='robot'){
+						// console.log("robot "+path+"//tests//web " +path+"//tests//mobileweb");
+						shell.exec("robot "+path+"//tests//web " +path+"//tests//mobileweb" , function (err) {
+							if (err) {
+								revertModificationOfheadless(framework,language);
+							}else{
+								revertModificationOfheadless(framework,language);
+							}
+						});
+					}else{
 					shell.exec(cmdJavaScript , function (err) {
 						if (err) {
 							revertModificationOfheadless(framework,language);
@@ -441,10 +464,11 @@ function executionCommandJava(chromePath, framework, language) {
 							revertModificationOfheadless(framework,language);
 						}
 					});
+					}
 				}
 				
 			} else {
-				executionCommandJava(chromePath,framework,language);
+				executionCommandJava(path,chromePath,framework,language);
 			}
 		});
 }
@@ -1161,9 +1185,11 @@ function getAdbVersion(callback) {
 exports.getAdbVersion = getAdbVersion;
 //# sourceMappingURL=fun.js.map
 function askForScheduing(cmd,chrmdriverPath,language,framework){
+	console.log('');
+	console.log('');
     inquirer
 		.prompt([{
-            type: "input",
+            type: "list",
             name: 'reptiles',
 			prefix: '>',
             name: "Do you want to schedule execution?",
@@ -1185,14 +1211,10 @@ function askForScheduing(cmd,chrmdriverPath,language,framework){
                     cronPattern = answers["Enter Cron Pattern "];
                     if (cronPattern !== undefined && cronPattern !== '' && cronPattern !== null) {
 						new CronJob(cronPattern, function() {
-						}, null, true, 'America/Los_Angeles');
-						// shell.exec(cmdJavaScript + ' -Dwebdriver.chrome.driver=' + chromePath, function (err) {
-						// 	if (err) {
-						// 		revertModificationOfheadless(framework ,language);
-						// 	}else{
-						// 		askForScheduing(cmdJavaScript,chromePath,language,framework);
-						// 		revertModificationOfheadless(framework,language);
-						// 	}
+							if(language==='java'){
+								shell.exec(cmd + ' -Dwebdriver.chrome.driver=' + chrmdriverPath);
+								}
+						}, null, true, Intl.DateTimeFormat().resolvedOptions().timeZone);
                     }
                 });
 

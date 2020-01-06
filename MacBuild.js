@@ -341,7 +341,7 @@ function doJavaScriptExecution(path, framework, language) {
         .then(answers => {
             chromePath = answers["Enter ChromeDriver path"];
             if (chromePath !== null && chromePath !== undefined && chromePath !== '') {
-                executionCommandJava(chromePath, framework, language);
+                executionCommandJava(path,chromePath, framework, language);
             }
             else {
                 doJavaScriptExecution(path, framework, language);
@@ -404,7 +404,7 @@ function executionCommandJavaScritpTypescript(path, framework, language) {
 				});
                 
             } else {
-                executionCommandJava(path);
+                executionCommandJavaScritpTypescript(path,framework,language);
             }
         });
 }
@@ -420,7 +420,7 @@ function revertJSTSModificationOfheadless(framework,language,path){
 		changeJasminTypeScriptProperties(path, false);
 	}
 }
-function executionCommandJava(chromePath, framework, language) {
+function executionCommandJava(path,chromePath, framework, language) {
     var cmdJavaScript = '';
     inquirer
         .prompt([{
@@ -435,21 +435,44 @@ function executionCommandJava(chromePath, framework, language) {
                 shell.env["PATH"] = existingPath + ':' + chromePath;
                 // shell.exec(cmdJavaScript);
                 if(language==='java'){
-                shell.exec(cmdJavaScript + ' -Dwebdriver.chrome.driver=' +chromePath, function (err) {
-                    if (err) {
-                        revertModificationOfheadless(framework,language);
-                    }else{
-                        revertModificationOfheadless(framework,language);
-                    }
-                });
+                    if(framework==='junit'){
+						// console.log('mvn  -Dtest=tests.web.*.*Test,tests.mobileweb.*.*Test -Dwebdriver.chrome.driver=' + chromePath + " site");
+						shell.exec('mvn  -Dtest=tests.web.*.*Test,tests.mobileweb.*.*Test -Dwebdriver.chrome.driver=' + chromePath + " site", function (err) {
+							if (err) {
+								revertModificationOfheadless(framework ,language);
+							}else{
+								// askForScheduing(cmdJavaScript,chromePath,language,framework);
+								revertModificationOfheadless(framework,language);
+							}
+						});
+					}else{
+                            shell.exec(cmdJavaScript + ' -Dwebdriver.chrome.driver=' +chromePath, function (err) {
+                                if (err) {
+                                    revertModificationOfheadless(framework,language);
+                                }else{
+                                    revertModificationOfheadless(framework,language);
+                                }
+                            });
+                         }
             }else{
-                shell.exec(cmdJavaScript , function (err) {
-                    if (err) {
-                        revertModificationOfheadless(framework,language);
-                    }else{
-                        revertModificationOfheadless(framework,language);
-                    }
-                });
+                if(framework==='robot'){
+                    // console.log("robot "+path+"//tests//web " +path+"//tests//mobileweb");
+                        shell.exec("robot "+path+"//tests//web " +path+"//tests//mobileweb" , function (err) {
+                            if (err) {
+                                revertModificationOfheadless(framework,language);
+                            }else{
+                                revertModificationOfheadless(framework,language);
+                            }
+                        });
+                }else{
+                        shell.exec(cmdJavaScript , function (err) {
+                            if (err) {
+                                revertModificationOfheadless(framework,language);
+                            }else{
+                                revertModificationOfheadless(framework,language);
+                            }
+                        });
+                }
             }
             } else {
                 executionCommandJava(path);
