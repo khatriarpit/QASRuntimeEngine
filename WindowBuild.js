@@ -28,7 +28,9 @@ inquirer
 
 function testings() {
 	console.log('');
-	getInstalledToolsInformation();
+	// getInstalledToolsInformation();
+	getInstalledToolsInformation(function a(response) {
+		// console.log(response);
 	process.env['qasHeadlessMode'] = 'true';
 	if (inputProjectMode === 'local System') {
 		checkoutFromLocalRepository();
@@ -40,12 +42,14 @@ function testings() {
 	} else {
 		console.log('Wrong Selection, Please select again');
 	}
+});
+
 }
 
 function gitCheckout() {
 	var path;
-	if (!shell.which('git')) {
-		shell.echo('Sorry, this script requires git for checkout');
+	if (response['git'] === null || response['git'] === '' || response['git'] =='undefined') {
+		shell.echo('Sorry, this script requires git for checkout.');
 		shell.exit(1);
 	}
 	inquirer
@@ -86,7 +90,7 @@ function processGitClone(path) {
 			if (cmdPerform !== undefined && cmdPerform !== '' && cmdPerform !== null) {
 				gitCheckoutWithInquer(cmdPerform, path);
 			} else {
-				processGitClone();
+				processGitClone(path);
 			}
 		});
 }
@@ -167,7 +171,7 @@ function gitCheckoutWithInquer(cmdPerform, path) {
 				}
 				if(checkExistingPlatform(exports.projectPath)){
 				if (framework === 'cucumber') {
-					loadPropertiesFromEachPathTSJS(path + "/resources/", true);
+					loadPropertiesFromEachPathTSJS(exports.projectPath + "/resources/", true);
 					executeExtraCommand(exports.projectPath, framework, language);
 				} else {
 					changeJasminProperties(exports.projectPath, true);
@@ -426,15 +430,30 @@ function executionCommandJava(path ,chromePath, framework, language) {
 				if (language == 'java') {
 					// mvn  -Dtest=tests.web.*.*Test,tests.mobileweb.*.*Test  site
 					if(framework==='junit'){
-						// console.log('mvn  -Dtest=tests.web.*.*Test,tests.mobileweb.*.*Test -Dwebdriver.chrome.driver=' + chromePath + " site");
-						shell.exec('mvn  -Dtest=tests.web.*.*Test,tests.mobileweb.*.*Test -Dwebdriver.chrome.driver=' + chromePath + " site", function (err) {
-							if (err) {
-								revertModificationOfheadless(framework ,language);
+						if(cmdJavaScript.toLowerCase().indexOf('test') > -1){
+							// console.log('mvn  -Dtest=tests.web.*.*Test,tests.mobileweb.*.*Test -Dwebdriver.chrome.driver=' + chromePath + " site");
+							shell.exec('mvn  -Dtest=tests.web.*.*Test,tests.mobileweb.*.*Test -DfailIfNoTests=false -Dwebdriver.chrome.driver=' + chromePath + " test", function (err) {
+								if (err) {
+									revertModificationOfheadless(framework ,language);
+								}else{
+									// askForScheduing(cmdJavaScript,chromePath,language,framework);
+									revertModificationOfheadless(framework,language);
+								}
+							});
+							}else if(cmdJavaScript.toLowerCase().indexOf('site') > -1) {
+											// console.log('mvn  -Dtest=tests.web.*.*Test,tests.mobileweb.*.*Test -Dwebdriver.chrome.driver=' + chromePath + " site");
+							shell.exec('mvn  -Dtest=tests.web.*.*Test,tests.mobileweb.*.*Test -DfailIfNoTests=false -Dwebdriver.chrome.driver=' + chromePath + " site", function (err) {
+								if (err) {
+									revertModificationOfheadless(framework ,language);
+								}else{
+									// askForScheduing(cmdJavaScript,chromePath,language,framework);
+									revertModificationOfheadless(framework,language);
+								}
+							});
 							}else{
-								// askForScheduing(cmdJavaScript,chromePath,language,framework);
-								revertModificationOfheadless(framework,language);
+								console.log('Sorry ,Command not found');
+								shell.exit(1);
 							}
-						});
 					}else{
 						shell.exec(cmdJavaScript + ' -Dwebdriver.chrome.driver=' + chromePath, function (err) {
 							if (err) {
@@ -448,18 +467,38 @@ function executionCommandJava(path ,chromePath, framework, language) {
 						
 				} else {
 					if(framework==='robot'){
-						// console.log("robot "+path+"//tests//web " +path+"//tests//mobileweb");
-						shell.exec("robot "+path+"//tests//web " +path+"//tests//mobileweb" , function (err) {
-							if (err) {
-								revertModificationOfheadless(framework,language);
-							}else{
-								revertModificationOfheadless(framework,language);
-							}
-						});
+						var isweb=false;
+						var isMob=false;
+						var robotWeburl=path+"/tests/web";
+						var robotMobUrl=path+"/tests/mobileweb";
+						if (checkDirectorySync(path+"/tests/web")) {
+								isweb=true;
+								
+						}else{
+							robotWeburl='';
+						}
+						if (checkDirectorySync(path+"/tests/mobileweb")) {
+							isMob=true;
+						}else{
+							robotMobUrl='';
+						}
+						if(!isMob && !isweb){
+							console.log('No tests available to run .');
+						}else{
+					 
+							shell.exec("robot "+robotWeburl+' '+robotMobUrl , function (err) {
+								if (err) {
+									revertModificationOfheadless(framework,language);
+								}else{
+									revertModificationOfheadless(framework,language);
+								}
+							});
+						}
 					}else{
 					shell.exec(cmdJavaScript , function (err) {
 						if (err) {
 							revertModificationOfheadless(framework,language);
+							doYouWantToExit();
 						}else{
 							revertModificationOfheadless(framework,language);
 						}
@@ -795,7 +834,7 @@ function saveEnvFile(content, fileToWrite, callback) {
 exports.saveEnvFile = saveEnvFile;
 //import * as window from 'vscode'
 
-function getInstalledToolsInformation() {
+function getInstalledToolsInformation(callback) {
 	// callback({ "java": "1.8.0", "npm": "6.4.0", ".net": null });
 
 	getJavaVersion(function (err, version) {
@@ -814,7 +853,10 @@ function getInstalledToolsInformation() {
 					response['mvn'] = version;
 					getNpmVersion(function (err, version) {
 						// console.log("npm: " + version);
-						response['npm'] = version;
+						// response['npm'] = version;	
+						getGitVersion(function (err, version) {
+							// console.log("git: " + version);
+							response['git'] = version;
 						/* isWin(function (err, version) {
 						    // console.log("win: " + version);
 						    if (version) {
@@ -836,6 +878,9 @@ function getInstalledToolsInformation() {
 						        callback(response);
 						    });
 						}); */
+						callback(response);
+					});
+
                     });
                 });
 				});
@@ -1070,6 +1115,38 @@ function getNpmVersion(callback) {
 }
 exports.getNpmVersion = getNpmVersion;
 
+function getGitVersion(callback) {
+	try {
+		 if (process.platform === 'win32') {
+			var spawn_5 = require('child_process').spawn('git', ['--version']);
+			var result = '';
+			var isCallBackDone = false;
+			spawn_5.stdout.on('data', function (data) {
+				result = result + data.toString();
+			});
+			spawn_5.stderr.on('data', function (data) {
+				result = result + data.toString();
+			});
+			spawn_5.on('close', function () {
+				result = result.split('git version')[1];
+				if (!isCallBackDone) {
+					isCallBackDone = true;
+					return callback(null, result);
+				}
+			});
+			spawn_5.on('error', function (err) {
+				// console.log('Oh noez, teh errurz: ' + err);
+				if (!isCallBackDone) {
+					isCallBackDone = true;
+					return callback(null, null);
+				}
+			});
+		} 
+	} catch (error) {
+		return callback(null, null);
+	}
+}
+exports.getGitVersion = getGitVersion;
 function getMvnVersion(callback) {
 	//console.log(process.platform);
 	try {
@@ -1111,9 +1188,10 @@ function getMvnVersion(callback) {
 				result = result + data.toString();
 			});
 			spawn_8.on('close', function (data) {
-				result = result.toString().split('\r')[0].split('\n')[0];
+			var result1=result.toString().split("Apache")[1];
+				result = result1.toString().split('\r')[0].split('\n')[0];
 				data = result;
-				var adbVersion = new RegExp('Apache Maven').test(data) ? data.split(' ')[2].replace(/"/g, '') : false;
+				var adbVersion = new RegExp(' Maven').test(data) ? data.split(' ')[2].replace(/"/g, '') : false;
 				if (adbVersion !== false) {
 					if (!callbackdone) {
 						callbackdone = true;
@@ -1221,4 +1299,24 @@ function askForScheduing(cmd,chrmdriverPath,language,framework){
             }
         });
 
-    }
+	}
+	
+	function doYouWantToExit() {
+		console.log("");
+		console.log("");
+		inquirer
+			.prompt([{
+				type: "input",
+				prefix: '>',
+				name: "Process completed,press Enter to Exit."
+			}])
+			.then(answers => {
+				path = answers["Process completed,press Enter to Exit."];
+				if (path !== undefined && path !== '' && path !== null) {
+					
+				} //check
+				else {
+					
+				}
+			});
+	}
