@@ -348,10 +348,15 @@ function doJavaScriptExecution(path, framework, language) {
             chromePath = answers["Enter ChromeDriver path"];
             if (chromePath !== null && chromePath !== undefined && chromePath !== '') {
 		    const a = exec(chromePath.trim(), function (err, stdout, stderr) {
+                console.log('>>>>>>>>>>>>>>'+stdout);
+                console.log('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>'+stderr);
+
                 if(stdout.toString().indexOf('Starting ChromeDriver')==-1){
+                    console.log("inside ----------------");
                         console.log('Enter valid chromedriver path.');
                         doJavaScriptExecution(path,framework,language);
                 }else{
+                    console.log("inside --------------- go for it-");
 				executionCommandJava(path,chromePath, framework, language);
 			    }
             });
