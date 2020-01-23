@@ -105,6 +105,7 @@ function gitCheckoutWithInquer(cmdPerform, path) {
             // process.chdir(exports.projectPath);
             var projectDetailsFile = exports.projectPath + '/.qas-data/.project';
             if (checkDirectorySync(projectDetailsFile)) {
+                shell.exec("sudo chown -R $USER "+exports.projectPath);
                 var oldProjectConfiguration = JSON.parse(fs.readFileSync(projectDetailsFile, "utf-8"));
                 var oldProjectData = oldProjectConfiguration.projectTypes;
                 var language = oldProjectConfiguration.language;
@@ -218,6 +219,7 @@ function checkoutFromLocalRepository() {
                 var projectDetailsFile = path + '/.qas-data/.project';
 
                 if (checkDirectorySync(projectDetailsFile)) {
+                    shell.exec("sudo chown -R $USER "+path);
                     exports.projectPath = path;
                     var oldProjectConfiguration = JSON.parse(fs.readFileSync(projectDetailsFile, "utf-8"));
                     var oldProjectData = oldProjectConfiguration.projectTypes;
@@ -851,6 +853,9 @@ function getInstalledToolsInformation() {
                 getMvnVersion(function (err, version) {
                     // console.log("mvn: " + version);
                     response['mvn'] = version;
+                    getPipVersion(function (err, version) {
+						// console.log("pip: " + version);
+						response['pip'] = version;
                     getNpmVersion(function (err, version) {
                         // console.log("npm: " + version);
                         response['npm'] = version;
@@ -876,6 +881,7 @@ function getInstalledToolsInformation() {
                             });
                         }); */
                     });
+                });
                 });
             });
         });
