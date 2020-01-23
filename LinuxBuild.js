@@ -347,7 +347,7 @@ function doJavaScriptExecution(path, framework, language) {
         .then(answers => {
             chromePath = answers["Enter ChromeDriver path"];
             if (chromePath !== null && chromePath !== undefined && chromePath !== '') {
-		    const a = exec(chromePath.trim(), function (err, stdout, stderr) {
+		    const a = shell.exec(chromePath.trim(), function (err, stdout, stderr) {
                 console.log('>>>>>>>>>>>>>>'+stdout);
                 console.log('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>'+stderr);
 
