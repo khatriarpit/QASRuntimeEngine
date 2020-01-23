@@ -28,7 +28,6 @@ inquirer
 function testings() {
     console.log('');
     getInstalledToolsInformation();
-    console.log('>>>>>>>>>>>>>'+JSON.stringify(response));
     process.env['qasHeadlessMode'] = 'true';
     if (inputProjectMode === 'local System') {
         checkoutFromLocalRepository();
@@ -348,9 +347,17 @@ function doJavaScriptExecution(path, framework, language) {
         .then(answers => {
             chromePath = answers["Enter ChromeDriver path"];
             if (chromePath !== null && chromePath !== undefined && chromePath !== '') {
-                executionCommandJava(path,chromePath, framework, language);
-            }
-            else {
+                exec(chromePath+'/chromedriver')
+                const a = exec(chromePath.trim()+'/chromedriver', function (err, stdout, stderr) {
+                    if (err) {
+                        console.log( 'Not valid chromedriver .');
+                        doJavaScriptExecution(path, framework, language);
+                    } else {
+                        console.log( 'valid chromedriver============= .');
+                        executionCommandJava(path,chromePath, framework, language);
+                    }
+            });
+         }else {
                 doJavaScriptExecution(path, framework, language);
             }
         });
@@ -361,13 +368,11 @@ function executePythonExtraCommand(path, framework, language) {
         pipalias='3';
     }
     process.chdir(path);
-    console.log("Please Wait .Installing required dependencies ." +pipalias);
-    shell.exec("pip"+pipalias +" install -r requirements.txt");
+    console.log("Please Wait .Installing required dependencies .");
+    shell.exec("sudo pip"+pipalias +" install -r requirements.txt");
     if(framework === 'robot'){
-        shell.exec("pip"+pipalias +" install robotframework");
-        shell.exec("pip"+pipalias +" install robotframework-appiumlibrary");
-    }else{
-        shell.exec("brew tap homebrew/cask && brew cask install chromedriver");
+        shell.exec("sudo pip"+pipalias +" install robotframework");
+        shell.exec("sudo pip"+pipalias +" install robotframework-appiumlibrary");
     }
     doJavaScriptExecution(path, framework, language);
 }
