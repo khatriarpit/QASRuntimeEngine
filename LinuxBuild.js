@@ -347,9 +347,31 @@ function doJavaScriptExecution(path, framework, language) {
         .then(answers => {
             chromePath = answers["Enter ChromeDriver path"];
             if (chromePath !== null && chromePath !== undefined && chromePath !== '') {
-		    const a = shell.exec(chromePath.trim()+' -version', function (err, stdout, stderr) {
+		 /*   const a = shell.exec(chromePath.trim()+' -version', function (err, stdout, stderr) {
                 console.log('Index :::::'+stdout.toString().indexOf('ChromeDriver'));
                 if(stdout.toString().indexOf('ChromeDriver')==-1){
+                    console.log("inside ----------------");
+                        console.log('Enter valid chromedriver path.');
+                        doJavaScriptExecution(path,framework,language);
+                }else{
+                    console.log("inside --------------- go for it-");
+				executionCommandJava(path,chromePath, framework, language);
+			    }
+            });*/
+            var spawn_9 = require('child_process').spawn(chromePath.trim(), ['-version']);
+            spawn_9.on('error', function (err) {
+                console.log('err :'+err);
+            });
+            var result = '';
+            spawn_9.stdout.on('data', function (data) {
+                result = result + data.toString();
+            });
+            spawn_9.stderr.on('data', function (data) {
+                result = result + data.toString();
+            });
+            spawn_9.on('close', function (data) {
+                console.log('Data--------------'+result);
+                if(result.toString().indexOf('ChromeDriver')==-1){
                     console.log("inside ----------------");
                         console.log('Enter valid chromedriver path.');
                         doJavaScriptExecution(path,framework,language);
