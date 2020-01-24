@@ -360,7 +360,7 @@ function doJavaScriptExecution(path, framework, language) {
             });*/
             var spawn_9 = require('child_process').spawn(chromePath.trim(), ['-version']);
             spawn_9.on('error', function (err) {
-                console.log('Error  :'+err);
+                // console.log('Error  :'+err);
             });
             var result = '';
             spawn_9.stdout.on('data', function (data) {
