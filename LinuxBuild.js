@@ -350,9 +350,7 @@ function doJavaScriptExecution(path, framework, language) {
                                 const {spawn} = require ('child_process');
                 const cmd = chromePath.trim()+' -version';
                 const p = spawn (cmd, [], {shell: true});
-
                 p.stdout.on ('data', (data) => {
-                console.log ('============'+data.toString ());
                 if(data.toString().indexOf('ChromeDriver')==-1){
                     console.log('Enter valid chromedriver path.');
                     doJavaScriptExecution(path,framework,language);
