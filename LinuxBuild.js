@@ -350,8 +350,8 @@ function doJavaScriptExecution(path, framework, language) {
 		    const a = shell.exec(chromePath.trim(), function (err, stdout, stderr) {
                 console.log('>>>>>>>>>>>>>>'+stdout);
                 console.log('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>'+stderr);
-                console.log('Index :::::'+stdout.toString().indexOf('Starting ChromeDriver'));
-                if(stdout.toString().indexOf('Starting ChromeDriver')==-1){
+                console.log('Index :::::'+stdout.toString().indexOf('ChromeDriver'));
+                if(stdout.toString().indexOf('ChromeDriver')==-1){
                     console.log("inside ----------------");
                         console.log('Enter valid chromedriver path.');
                         doJavaScriptExecution(path,framework,language);
