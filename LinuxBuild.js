@@ -360,7 +360,7 @@ function doJavaScriptExecution(path, framework, language) {
             });*/
             var spawn_9 = require('child_process').spawn(chromePath.trim(), ['-version']);
             spawn_9.on('error', function (err) {
-                console.log('err :'+err);
+                console.log('Error  :'+err);
             });
             var result = '';
             spawn_9.stdout.on('data', function (data) {
@@ -370,13 +370,10 @@ function doJavaScriptExecution(path, framework, language) {
                 result = result + data.toString();
             });
             spawn_9.on('close', function (data) {
-                console.log('Data--------------'+result);
                 if(result.toString().indexOf('ChromeDriver')==-1){
-                    console.log("inside ----------------");
                         console.log('Enter valid chromedriver path.');
                         doJavaScriptExecution(path,framework,language);
                 }else{
-                    console.log("inside --------------- go for it-");
 				executionCommandJava(path,chromePath, framework, language);
 			    }
             });
