@@ -347,14 +347,27 @@ function doJavaScriptExecution(path, framework, language) {
         .then(answers => {
             chromePath = answers["Enter ChromeDriver path"];
             if (chromePath !== null && chromePath !== undefined && chromePath !== '') {
-		    const a = shell.exec(chromePath.trim()+' -version', function (err, stdout, stderr) {
+                                const {spawn} = require ('child_process');
+                const cmd = chromePath.trim()+' -version';
+                const p = spawn (cmd, [], {shell: true});
+
+                p.stdout.on ('data', (data) => {
+                console.log ('============'+data.toString ());
+                if(data.toString().indexOf('ChromeDriver')==-1){
+                    console.log('Enter valid chromedriver path.');
+                    doJavaScriptExecution(path,framework,language);
+            }else{
+                    executionCommandJava(path,chromePath, framework, language);
+            }
+                });
+		/*     const a = shell.exec(chromePath.trim()+' -version', function (err, stdout, stderr) {
                 if(stdout.toString().indexOf('ChromeDriver')==-1){
                         console.log('Enter valid chromedriver path.');
                         doJavaScriptExecution(path,framework,language);
                 }else{
         				executionCommandJava(path,chromePath, framework, language);
 			    }
-            });
+            }); */
          }else {
                 doJavaScriptExecution(path, framework, language);
             }
