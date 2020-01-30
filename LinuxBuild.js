@@ -498,7 +498,7 @@ function executionCommandJava(path,chromePath, framework, language) {
                     }else{
                             shell.exec(cmdJavaScript + ' -Dwebdriver.chrome.driver=' +chromePath, function (err) {
                                 if (err) {
-                                    console.log("inside >>>>>>>>>>>>>>>");
+                                    console.log("inside >>>>>>>>>>>>>>>"+err);
                                     revertModificationOfheadless(framework,language);
                                 }else{
                                     console.log("sucess>>>>>>>>>>>inside?????");
