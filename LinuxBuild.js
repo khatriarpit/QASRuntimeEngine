@@ -105,7 +105,7 @@ function gitCheckoutWithInquer(cmdPerform, path) {
             // process.chdir(exports.projectPath);
             var projectDetailsFile = exports.projectPath + '/.qas-data/.project';
             if (checkDirectorySync(projectDetailsFile)) {
-                shell.exec("sudo chown -R $USER "+exports.projectPath);
+                shell.exec("chown -R $USER "+exports.projectPath);
                 var oldProjectConfiguration = JSON.parse(fs.readFileSync(projectDetailsFile, "utf-8"));
                 var oldProjectData = oldProjectConfiguration.projectTypes;
                 var language = oldProjectConfiguration.language;
@@ -221,7 +221,7 @@ function checkoutFromLocalRepository() {
                 var projectDetailsFile = path + '/.qas-data/.project';
 
                 if (checkDirectorySync(projectDetailsFile)) {
-                    shell.exec("sudo chown -R $USER "+path);
+                    shell.exec("chown -R $USER "+path);
                     exports.projectPath = path;
                     var oldProjectConfiguration = JSON.parse(fs.readFileSync(projectDetailsFile, "utf-8"));
                     var oldProjectData = oldProjectConfiguration.projectTypes;
@@ -389,10 +389,10 @@ function executePythonExtraCommand(path, framework, language) {
     }
     process.chdir(path);
     console.log("Please Wait .Installing required dependencies .");
-    shell.exec("sudo pip"+pipalias +" install -r requirements.txt");
+    shell.exec("pip"+pipalias +" install -r requirements.txt");
     if(framework === 'robot'){
-        shell.exec("sudo pip"+pipalias +" install robotframework");
-        shell.exec("sudo pip"+pipalias +" install robotframework-appiumlibrary");
+        shell.exec("pip"+pipalias +" install robotframework");
+        shell.exec("pip"+pipalias +" install robotframework-appiumlibrary");
     }
     doJavaScriptExecution(path, framework, language);
 }
@@ -430,6 +430,7 @@ function executionCommandJavaScritpTypescript(path, framework, language) {
                     if (err) {
                         revertJSTSModificationOfheadless(framework ,language,path);
                     }else{
+                        printReportPath(framework,path);
                         revertJSTSModificationOfheadless(framework,language,path);
                     }
                 });
@@ -474,6 +475,7 @@ function executionCommandJava(path,chromePath, framework, language) {
                                 revertModificationOfheadless(framework ,language);
                             }else{
                                 // askForScheduing(cmdJavaScript,chromePath,language,framework);
+                                printReportPath(framework,path);
                                 revertModificationOfheadless(framework,language);
                             }
                         });
@@ -484,6 +486,7 @@ function executionCommandJava(path,chromePath, framework, language) {
                                 revertModificationOfheadless(framework ,language);
                             }else{
                                 // askForScheduing(cmdJavaScript,chromePath,language,framework);
+                                printReportPath(framework,path);
                                 revertModificationOfheadless(framework,language);
                             }
                         });
@@ -497,6 +500,7 @@ function executionCommandJava(path,chromePath, framework, language) {
                                 if (err) {
                                     revertModificationOfheadless(framework,language);
                                 }else{
+                                    printReportPath(framework,path);
                                     revertModificationOfheadless(framework,language);
                                 }
                             });
@@ -526,6 +530,7 @@ function executionCommandJava(path,chromePath, framework, language) {
                             if (err) {
                                 revertModificationOfheadless(framework,language);
                             }else{
+                                printReportPath(framework,path);
                                 revertModificationOfheadless(framework,language);
                             }
                         });
@@ -535,6 +540,7 @@ function executionCommandJava(path,chromePath, framework, language) {
                             if (err) {
                                 revertModificationOfheadless(framework,language);
                             }else{
+                                printReportPath(framework,path);
                                 revertModificationOfheadless(framework,language);
                             }
                         });
@@ -1427,4 +1433,26 @@ function askForScheduing(cmd,chrmdriverPath,language,framework){
             }
         });
 
+    }
+
+function printReportPath(framework,projectPath){
+        if (framework === 'robot') {
+            fs.readFile('D:\\Demo\\23-1\\Java_JUNIT\\test-results\\meta-info.json', (err, data) => {
+                if (err) throw err;
+                let student = JSON.parse(data);
+                var lastValue = student['reports'];
+                if (lastValue !== undefined) {
+                    console.log("===================================================================================");
+                    var lastDirName = lastValue[0].dir;
+                    if (lastDirName !== undefined) {
+                        console.log("QAS CLI Report Path :: " + lastDirName.replace('/json', ''));
+                    }
+                    console.log("===================================================================================");
+                }
+            });
+        } else {
+            console.log("===================================================================================");
+            console.log("QAS CLI Report Path :: " + "\\report.html");
+            console.log("===================================================================================");
+        }
     }
