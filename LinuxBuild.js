@@ -655,6 +655,7 @@ function changePythonBehaveProperties(path, isSave) {
     platforms.forEach(function (element) {
         var platformDir = path + "/resources/" + element + "/";
         if (fs.existsSync(platformDir)) {
+            try{
             fs.readdirSync(platformDir).forEach(function (file) {
                 if (file.search("env.properties") !== -1) {
                     var property = new PropertiesReader(platformDir + "env.properties");
@@ -684,6 +685,12 @@ function changePythonBehaveProperties(path, isSave) {
                     });
                 }
             });
+        }catch(err){
+            if(err.toString().indexOf('EACCES: permission denied') >-1){
+                console.log('ERROR: Please give read permission to the project for further execution.' );
+            }
+            shell.exit(1)
+        }
         }
     });
 }
@@ -714,6 +721,7 @@ function changePythonRobotProperties(path, isSave) {
     platforms.forEach(function (element) {
         var platformDir = path + "/steps/" + element + "/";
         if (fs.existsSync(platformDir)) {
+            try{
             if (isSave) {
                 if (element === 'mobileweb') {
                     fs.writeFileSync(platformDir + "/step_definitions.robot", fs.readFileSync(platformDir + "/step_definitions.robot", 'utf8').replace("${options}=         Get Chrome Mobile Options", ' ${options}=         Get Chrome Mobile Options \n  Call Method    ${options}    add_argument    --headless \n  Call Method    ${options}    add_argument    --disable-gpu \n  Call Method    ${options}    add_argument    --no-sandbox \n  Call Method    ${options}    add_argument    --disable-dev-shm-usage'));
@@ -728,6 +736,12 @@ function changePythonRobotProperties(path, isSave) {
                     fs.writeFileSync(platformDir + "/step_definitions.robot", fs.readFileSync(platformDir + "/step_definitions.robot", 'utf8').replace("headlesschrome", ' ${BROWSER}'));
                 }
             }
+        }catch(err){
+            if(err.toString().indexOf('EACCES: permission denied') >-1){
+                console.log('ERROR: Please give read permission to the project for further execution.' );
+            }
+            shell.exit(1)
+        }
         }
     });
 }
@@ -735,6 +749,7 @@ function changeJasminProperties(path, isSave) {
     var platforms = ['web', 'mobileweb'];
     platforms.forEach(function (element) {
         var platformDir = path + "/resources/" + element + "/";
+        try{
         if (fs.existsSync(platformDir)) {
             if (isSave) {
                 if (element === 'web') {
@@ -750,6 +765,12 @@ function changeJasminProperties(path, isSave) {
                 }
             }
         }
+    }catch(err){
+        if(err.toString().indexOf('EACCES: permission denied') >-1){
+            console.log('ERROR: Please give read permission to the project for further execution.' );
+        }
+        shell.exit(1)
+    }
     });
 }
 function changeJasminTypeScriptProperties(path, isSave) {
@@ -757,6 +778,7 @@ function changeJasminTypeScriptProperties(path, isSave) {
     platforms.forEach(function (element) {
         var platformDir = path + "/resources/" + element + "/";
         if (fs.existsSync(platformDir)) {
+            try{
             if (isSave) {
                 if (element === 'web') {
                     fs.writeFileSync(platformDir + "/env.ts", fs.readFileSync(platformDir + "/env.ts", 'utf8').replace("browserName: 'chrome'","browserName: 'chrome',\n chromeOptions: {\n args: [\"--headless\",\"--no-sandbox\",\"--disable-dev-shm-usage\"]\n}"));
@@ -771,6 +793,12 @@ function changeJasminTypeScriptProperties(path, isSave) {
                 }
                 //fs.writeFileSync(platformDir + "/env.ts", fs.readFileSync(platformDir + "/env.ts", 'utf8').replace("--headless", "mode"));
             }
+        }catch(err){
+            if(err.toString().indexOf('EACCES: permission denied') >-1){
+                console.log('ERROR: Please give read permission to the project for further execution.' );
+            }
+            shell.exit(1)
+        }
         }
     });
 }
@@ -779,6 +807,7 @@ function loadPropertiesFromEachPathTSJS(path, isSave) {
     platforms.forEach(function (element) {
         var platformDir = path + "/" + element + "/";
         if (fs.existsSync(platformDir)) {
+            try{
             fs.readdirSync(platformDir).forEach(function (file) {
                 if (file.search("env.properties") !== -1) {
                     var property = new PropertiesReader(platformDir + "env.properties");
@@ -814,6 +843,12 @@ function loadPropertiesFromEachPathTSJS(path, isSave) {
                     });
                 }
             });
+        }catch(err){
+            if(err.toString().indexOf('EACCES: permission denied') >-1){
+                console.log('ERROR: Please give read permission to the project for further execution.' );
+            }
+            shell.exit(1)
+        }
         }
     });
 }
@@ -859,10 +894,10 @@ function loadPropertiesFromEachPath(path, isSave) {
                 }
             });
         }catch(err){
-            console.log('>>>>>>>>>>>>> : '+err);
-            if(err.toLowerCase().indexOf('EACCES: permission denied') >-1){
+            if(err.toString().indexOf('EACCES: permission denied') >-1){
                 console.log('ERROR: Please give read permission to the project for further execution.' );
             }
+            shell.exit(1)
         }
         }
     });
