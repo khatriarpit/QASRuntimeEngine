@@ -822,6 +822,7 @@ function loadPropertiesFromEachPath(path, isSave) {
     platforms.forEach(function (element) {
         var platformDir = path + "/" + element + "/";
         if (fs.existsSync(platformDir)) {
+             try{
             fs.readdirSync(platformDir).forEach(function (file) {
                 if (file.search("env.properties") !== -1) {
                     var property = new PropertiesReader(platformDir + "env.properties");
@@ -857,6 +858,12 @@ function loadPropertiesFromEachPath(path, isSave) {
                     });
                 }
             });
+        }catch(err){
+            console.log('>>>>>>>>>>>>> : '+err);
+            if(err.toLowerCase().indexOf('EACCES: permission denied') >-1){
+                console.log('ERROR: Please give read permission to the project for further execution.' );
+            }
+        }
         }
     });
 }
