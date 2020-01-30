@@ -221,7 +221,7 @@ function checkoutFromLocalRepository() {
                 var projectDetailsFile = path + '/.qas-data/.project';
 
                 if (checkDirectorySync(projectDetailsFile)) {
-                    shell.exec("chown -R $USER "+path);
+                    // shell.exec("chown -R $USER "+path);
                     exports.projectPath = path;
                     var oldProjectConfiguration = JSON.parse(fs.readFileSync(projectDetailsFile, "utf-8"));
                     var oldProjectData = oldProjectConfiguration.projectTypes;
@@ -498,8 +498,10 @@ function executionCommandJava(path,chromePath, framework, language) {
                     }else{
                             shell.exec(cmdJavaScript + ' -Dwebdriver.chrome.driver=' +chromePath, function (err) {
                                 if (err) {
+                                    console.log("inside >>>>>>>>>>>>>>>");
                                     revertModificationOfheadless(framework,language);
                                 }else{
+                                    console.log("sucess>>>>>>>>>>>inside?????");
                                     printReportPath(framework,path);
                                     revertModificationOfheadless(framework,language);
                                 }
@@ -862,7 +864,9 @@ function saveEnvFile(content, fileToWrite, callback) {
     fs.existsSync(fileToWrite);
     fs.writeFileSync(fileToWrite, content, function (err) {
         if (err) {
-            console.log('ERROR: ' + err);
+            if(err.toLowerCase().indexOf('EACCES: permission denied') >-1){
+            console.log('ERROR: Please give read permission to the project for further execution.' );
+            }
             callback({ success: false, errMessage: err });
         }
         else {
