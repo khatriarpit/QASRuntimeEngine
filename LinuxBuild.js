@@ -1436,6 +1436,7 @@ function askForScheduing(cmd,chrmdriverPath,language,framework){
     }
 
 function printReportPath(framework,projectPath){
+    console.log("calling _______________________REport Method");
         if (framework === 'robot') {
             fs.readFile('D:\\Demo\\23-1\\Java_JUNIT\\test-results\\meta-info.json', (err, data) => {
                 if (err) throw err;
@@ -1445,14 +1446,14 @@ function printReportPath(framework,projectPath){
                     console.log("===================================================================================");
                     var lastDirName = lastValue[0].dir;
                     if (lastDirName !== undefined) {
-                        console.log("QAS CLI Report Path :: " + lastDirName.replace('/json', ''));
+                        console.log("QAS CLI Report Path :: " +projectPath+"/"+ lastDirName.replace('/json', ''));
                     }
                     console.log("===================================================================================");
                 }
             });
         } else {
             console.log("===================================================================================");
-            console.log("QAS CLI Report Path :: " + "\\report.html");
+            console.log("QAS CLI Report Path :: "+projectPath + "\\report.html");
             console.log("===================================================================================");
         }
     }
