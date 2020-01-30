@@ -428,6 +428,9 @@ function executionCommandJavaScritpTypescript(path, framework, language) {
             if (cmdJavaScript !== null && cmdJavaScript !== undefined && cmdJavaScript !== '') {
                 shell.exec(cmdJavaScript , function (err) {
                     if (err) {
+                        if(err.toString() === '1'){
+                            printReportPath(framework,path);
+                        }
                         revertJSTSModificationOfheadless(framework ,language,path);
                     }else{
                         printReportPath(framework,path);
@@ -473,6 +476,9 @@ function executionCommandJava(path,chromePath, framework, language) {
                         shell.exec('mvn  -Dtest=tests.web.*.*Test,tests.mobileweb.*.*Test -DfailIfNoTests=false -Dwebdriver.chrome.driver=' + chromePath + " test", function (err) {
                             if (err) {
                                 revertModificationOfheadless(framework ,language);
+                                if(err.toString() === '1'){
+                                    printReportPath(framework,path);
+                                }
                             }else{
                                 // askForScheduing(cmdJavaScript,chromePath,language,framework);
                                 printReportPath(framework,path);
@@ -484,6 +490,9 @@ function executionCommandJava(path,chromePath, framework, language) {
                         shell.exec('mvn  -Dtest=tests.web.*.*Test,tests.mobileweb.*.*Test -DfailIfNoTests=false -Dwebdriver.chrome.driver=' + chromePath + " site", function (err) {
                             if (err) {
                                 revertModificationOfheadless(framework ,language);
+                                if(err.toString() === '1'){
+                                    printReportPath(framework,path);
+                                }
                             }else{
                                 // askForScheduing(cmdJavaScript,chromePath,language,framework);
                                 printReportPath(framework,path);
@@ -498,10 +507,11 @@ function executionCommandJava(path,chromePath, framework, language) {
                     }else{
                             shell.exec(cmdJavaScript + ' -Dwebdriver.chrome.driver=' +chromePath, function (err) {
                                 if (err) {
-                                    console.log("inside >>>>>>>>>>>>>>>"+err);
                                     revertModificationOfheadless(framework,language);
+                                    if(err.toString() === '1'){
+                                        printReportPath(framework,path);
+                                    }
                                 }else{
-                                    console.log("sucess>>>>>>>>>>>inside?????");
                                     printReportPath(framework,path);
                                     revertModificationOfheadless(framework,language);
                                 }
@@ -531,6 +541,9 @@ function executionCommandJava(path,chromePath, framework, language) {
                         shell.exec("robot "+robotWeburl+' '+robotMobUrl , function (err) {
                             if (err) {
                                 revertModificationOfheadless(framework,language);
+                                if(err.toString() === '1'){
+                                    printReportPath(framework,path);
+                                }
                             }else{
                                 printReportPath(framework,path);
                                 revertModificationOfheadless(framework,language);
@@ -541,6 +554,9 @@ function executionCommandJava(path,chromePath, framework, language) {
                         shell.exec(cmdJavaScript , function (err) {
                             if (err) {
                                 revertModificationOfheadless(framework,language);
+                                if(err.toString() === '1'){
+                                    printReportPath(framework,path);
+                                }
                             }else{
                                 printReportPath(framework,path);
                                 revertModificationOfheadless(framework,language);
