@@ -1498,24 +1498,23 @@ function askForScheduing(cmd,chrmdriverPath,language,framework){
     }
 
 function printReportPath(framework,projectPath){
-    console.log("calling _______________________REport Method");
-        if (framework === 'robot') {
-            fs.readFile('D:\\Demo\\23-1\\Java_JUNIT\\test-results\\meta-info.json', (err, data) => {
+        if (framework !== 'robot') {
+            fs.readFile(projectPath+'\\test-results\\meta-info.json', (err, data) => {
                 if (err) throw err;
                 let student = JSON.parse(data);
                 var lastValue = student['reports'];
                 if (lastValue !== undefined) {
-                    console.log("===================================================================================");
+                    console.log("==================================================================================================================");
                     var lastDirName = lastValue[0].dir;
                     if (lastDirName !== undefined) {
                         console.log("QAS CLI Report Path :: " +projectPath+"/"+ lastDirName.replace('/json', ''));
                     }
-                    console.log("===================================================================================");
+                    console.log("==================================================================================================================");
                 }
             });
         } else {
-            console.log("===================================================================================");
-            console.log("QAS CLI Report Path :: "+projectPath + "\\report.html");
-            console.log("===================================================================================");
+            console.log("==================================================================================================================================");
+            console.log("QAS CLI Report Path :: "+projectPath + "/report.html");
+            console.log("==================================================================================================================================");
         }
     }
