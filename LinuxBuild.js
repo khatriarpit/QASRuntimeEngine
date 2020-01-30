@@ -1499,7 +1499,7 @@ function askForScheduing(cmd,chrmdriverPath,language,framework){
 
 function printReportPath(framework,projectPath){
         if (framework !== 'robot') {
-            fs.readFile(projectPath+'\\test-results\\meta-info.json', (err, data) => {
+            fs.readFile(projectPath+'/test-results/meta-info.json', (err, data) => {
                 if (err) throw err;
                 let student = JSON.parse(data);
                 var lastValue = student['reports'];
