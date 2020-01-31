@@ -1501,7 +1501,8 @@ function printReportPath(framework,projectPath){
     console.log("----------------------------------------------------------------------------------------------");
     console.log(" Report Path ")
     console.log("----------------------------------------------------------------------------------------------");
-  
+    console.log('')   
+    console.log('');
       if (framework !== 'robot') {
             fs.readFile(projectPath+'/test-results/meta-info.json', (err, data) => {
                 if (err) throw err;
