@@ -1498,23 +1498,26 @@ function askForScheduing(cmd,chrmdriverPath,language,framework){
     }
 
 function printReportPath(framework,projectPath){
-        if (framework !== 'robot') {
+    console.log("---------------------------------------------------------------------------------------------------------------------------");
+    console.log(" Report Path ")
+    console.log("---------------------------------------------------------------------------------------------------------------------------");
+  
+      if (framework !== 'robot') {
             fs.readFile(projectPath+'/test-results/meta-info.json', (err, data) => {
                 if (err) throw err;
                 let student = JSON.parse(data);
                 var lastValue = student['reports'];
+              
                 if (lastValue !== undefined) {
-                    console.log("==================================================================================================================");
                     var lastDirName = lastValue[0].dir;
                     if (lastDirName !== undefined) {
-                        console.log("QAS CLI Report Path :: " +projectPath+"/"+ lastDirName.replace('/json', ''));
+                        console.log(projectPath+"/"+ lastDirName.replace('/json', ''));
                     }
-                    console.log("==================================================================================================================");
                 }
             });
         } else {
-            console.log("==================================================================================================================================");
-            console.log("QAS CLI Report Path :: "+projectPath + "/report.html");
-            console.log("==================================================================================================================================");
+            console.log(projectPath + "/report.html");
         }
+        console.log("---------------------------------------------------------------------------------------------------------------------------");
+
     }
