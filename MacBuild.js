@@ -105,7 +105,7 @@ function gitCheckoutWithInquer(cmdPerform, path) {
             // process.chdir(exports.projectPath);
             var projectDetailsFile = exports.projectPath + '/.qas-data/.project';
             if (checkDirectorySync(projectDetailsFile)) {
-                shell.exec("sudo chown -R $USER "+exports.projectPath);
+                // shell.exec("sudo chown -R $USER "+exports.projectPath);
                 var oldProjectConfiguration = JSON.parse(fs.readFileSync(projectDetailsFile, "utf-8"));
                 var oldProjectData = oldProjectConfiguration.projectTypes;
                 var language = oldProjectConfiguration.language;
@@ -139,11 +139,13 @@ function gitCheckoutWithInquer(cmdPerform, path) {
                    
                 }
                 else if (language !== undefined && language !== '' && language === 'python') {
-                    if (response['python'] === null || response['python'] === '' || response['python'] === 'undefined') {
+                    if ((response['python'] === null || response['python'] === '' || response['python'] === 'undefined') &&
+                     (response['python3'] === null || response['python3'] === '' || response['python3'] === 'undefined')) {
                         shell.echo('QAS Runtime Engine requires python for Execution . Please install Python first .');
                         shell.exit(1);
                     }
-                    if (response['pip'] === null || response['pip'] === '' || response['pip'] === 'undefined') {
+                    if ((response['pip'] === null || response['pip'] === '' || response['pip'] === 'undefined') &&
+                     (response['pip3'] === null || response['pip3'] === '' || response['pip3'] === 'undefined')) {
                         shell.echo('QAS Runtime Engine requires pip for python Execution . Please install pip first .');
                         shell.exit(1);
                     }
@@ -219,7 +221,7 @@ function checkoutFromLocalRepository() {
                 var projectDetailsFile = path + '/.qas-data/.project';
 
                 if (checkDirectorySync(projectDetailsFile)) {
-                    shell.exec("sudo chown -R $USER "+path);
+                    // shell.exec("sudo chown -R $USER "+path);
                     exports.projectPath = path;
                     var oldProjectConfiguration = JSON.parse(fs.readFileSync(projectDetailsFile, "utf-8"));
                     var oldProjectData = oldProjectConfiguration.projectTypes;
@@ -253,12 +255,14 @@ function checkoutFromLocalRepository() {
                         }
                     }
                     else if (language !== undefined && language !== '' && language === 'python') {
-                        if (response['python'] === null || response['python'] === '' || response['python'] === 'undefined') {
-                            shell.echo('QAS Runtime Engine requires python for Execution . Please install Python first .');
-                            shell.exit(1);
-                        }
-                        if (response['pip'] === null || response['pip'] === '' || response['pip'] === 'undefined') {
-                            shell.echo('QAS Runtime Engine requires pip for python Execution . Please install pip first .');
+                        if ((response['python'] === null || response['python'] === '' || response['python'] === 'undefined') &&
+                        (response['python3'] === null || response['python3'] === '' || response['python3'] === 'undefined')) {
+                           shell.echo('QAS Runtime Engine requires python for Execution . Please install Python first .');
+                           shell.exit(1);
+                       }
+                       if ((response['pip'] === null || response['pip'] === '' || response['pip'] === 'undefined') &&
+                         (response['pip3'] === null || response['pip3'] === '' || response['pip3'] === 'undefined')) {
+                           shell.echo('QAS Runtime Engine requires pip for python Execution . Please install pip first .');
                             shell.exit(1);
                         }
                         if (framework === 'robot') {
@@ -343,7 +347,26 @@ function doJavaScriptExecution(path, framework, language) {
         .then(answers => {
             chromePath = answers["Enter ChromeDriver path"];
             if (chromePath !== null && chromePath !== undefined && chromePath !== '') {
-                executionCommandJava(path,chromePath, framework, language);
+                // executionCommandJava(path,chromePath, framework, language);
+                var spawn_9 = require('child_process').spawn(chromePath.trim(), ['-version']);
+                spawn_9.on('error', function (err) {
+                    // console.log('Error  :'+err);
+                });
+                var result = '';
+                spawn_9.stdout.on('data', function (data) {
+                    result = result + data.toString();
+                });
+                spawn_9.stderr.on('data', function (data) {
+                    result = result + data.toString();
+                });
+                spawn_9.on('close', function (data) {
+                    if(result.toString().indexOf('ChromeDriver')==-1){
+                            console.log('Enter valid chromedriver path.');
+                            doJavaScriptExecution(path,framework,language);
+                    }else{
+                    executionCommandJava(path,chromePath, framework, language);
+                    }
+                });
             }
             else {
                 doJavaScriptExecution(path, framework, language);
@@ -351,9 +374,9 @@ function doJavaScriptExecution(path, framework, language) {
         });
 }
 function executePythonExtraCommand(path, framework, language) {
-    var pythonVersion=response['python'];
+    
     var pipalias='';
-    if(pythonVersion.substring(0, 1)=== '3'){
+    if(!(response['python3'] === null || response['python3'] === '' || response['python3'] === 'undefined')){
         pipalias='3';
     }
     process.chdir(path);
@@ -399,8 +422,10 @@ function executionCommandJavaScritpTypescript(path, framework, language) {
             if (cmdJavaScript !== null && cmdJavaScript !== undefined && cmdJavaScript !== '') {
                 shell.exec(cmdJavaScript , function (err) {
                     if (err) {
+                        printReportPath(framework,path);
                         revertJSTSModificationOfheadless(framework ,language,path);
                     }else{
+                        printReportPath(framework,path);
                         revertJSTSModificationOfheadless(framework,language,path);
                     }
                 });
@@ -443,8 +468,10 @@ function executionCommandJava(path,chromePath, framework, language) {
                         shell.exec('mvn  -Dtest=tests.web.*.*Test,tests.mobileweb.*.*Test -DfailIfNoTests=false -Dwebdriver.chrome.driver=' + chromePath + " test", function (err) {
                             if (err) {
                                 revertModificationOfheadless(framework ,language);
+                                printReportPath(framework,path);
                             }else{
                                 // askForScheduing(cmdJavaScript,chromePath,language,framework);
+                                printReportPath(framework,path);
                                 revertModificationOfheadless(framework,language);
                             }
                         });
@@ -453,9 +480,11 @@ function executionCommandJava(path,chromePath, framework, language) {
                         shell.exec('mvn  -Dtest=tests.web.*.*Test,tests.mobileweb.*.*Test -DfailIfNoTests=false -Dwebdriver.chrome.driver=' + chromePath + " site", function (err) {
                             if (err) {
                                 revertModificationOfheadless(framework ,language);
+                                printReportPath(framework,path);
                             }else{
                                 // askForScheduing(cmdJavaScript,chromePath,language,framework);
                                 revertModificationOfheadless(framework,language);
+                                printReportPath(framework,path);
                             }
                         });
                         }else{
@@ -467,8 +496,10 @@ function executionCommandJava(path,chromePath, framework, language) {
                             shell.exec(cmdJavaScript + ' -Dwebdriver.chrome.driver=' +chromePath, function (err) {
                                 if (err) {
                                     revertModificationOfheadless(framework,language);
+                                    printReportPath(framework,path);
                                 }else{
                                     revertModificationOfheadless(framework,language);
+                                    printReportPath(framework,path);
                                 }
                             });
                          }
@@ -496,8 +527,10 @@ function executionCommandJava(path,chromePath, framework, language) {
                         shell.exec("robot "+robotWeburl+' '+robotMobUrl , function (err) {
                             if (err) {
                                 revertModificationOfheadless(framework,language);
+                                printReportPath(framework,path);
                             }else{
                                 revertModificationOfheadless(framework,language);
+                                printReportPath(framework,path);
                             }
                         });
                     }
@@ -505,8 +538,10 @@ function executionCommandJava(path,chromePath, framework, language) {
                         shell.exec(cmdJavaScript , function (err) {
                             if (err) {
                                 revertModificationOfheadless(framework,language);
+                                printReportPath(framework,path);
                             }else{
                                 revertModificationOfheadless(framework,language);
+                                printReportPath(framework,path);
                             }
                         });
                 }
@@ -855,7 +890,12 @@ function getInstalledToolsInformation() {
                     response['mvn'] = version;
                     getPipVersion(function (err, version) {
 						// console.log("pip: " + version);
-						response['pip'] = version;
+                        response['pip'] = version;
+                        getPython3Version(function (err, version) {
+                            // console.log("python: " + version);
+                            response['python3'] = version;
+                            getPip3Version(function (err, version) {
+                                // console.log("pip: " + version);
                     getNpmVersion(function (err, version) {
                         // console.log("npm: " + version);
                         response['npm'] = version;
@@ -880,6 +920,8 @@ function getInstalledToolsInformation() {
                                 callback(response);
                             });
                         }); */
+                    });
+                        });
                     });
                 });
                 });
@@ -1012,6 +1054,53 @@ function getPythonVersion(callback) {
     }
 }
 exports.getPythonVersion = getPythonVersion;
+function getPython3Version(callback) {
+    try {
+        var spawn_2 = require('child_process').spawn('python3', ['--version']);
+        var isCallBackDone = false;
+        spawn_2.on('error', function (err) {
+            if (!isCallBackDone) {
+                isCallBackDone = true;
+                return callback(err, null);
+            }
+        });
+        spawn_2.stdout.on('data', function (data) {
+            data = data.toString().split('\n')[0].split('\r')[0];
+            var pythonVersion = new RegExp('Python').test(data) ? data.split(' ')[1].replace(/"/g, '') : false;
+            if (pythonVersion !== false) {
+                if (!isCallBackDone) {
+                    isCallBackDone = true;
+                    return callback(null, pythonVersion);
+                }
+            }
+            else {
+                if (!isCallBackDone) {
+                    isCallBackDone = true;
+                    return callback(null, null);
+                }
+            }
+        });
+        spawn_2.stderr.on('data', function (data) {
+            data = data.toString().split('\n')[0].split('\r')[0];
+            var pythonVersion = new RegExp('Python').test(data) ? data.split(' ')[1].replace(/"/g, '') : false;
+            if (pythonVersion !== false) {
+                if (!isCallBackDone) {
+                    isCallBackDone = true;
+                    return callback(null, pythonVersion);
+                }
+            }
+            else {
+                if (!isCallBackDone) {
+                    isCallBackDone = true;
+                    return callback(null, null);
+                }
+            }
+        });
+    }
+    catch (error) {
+        return callback(null, null);
+    }
+}
 function getPipVersion(callback) {
     try {
         var spawn_3 = require('child_process').spawn('pip', ['--version']);
@@ -1051,6 +1140,44 @@ function getPipVersion(callback) {
     }
 }
 exports.getPipVersion = getPipVersion;
+function getPip3Version(callback) {
+    try {
+        var spawn_3 = require('child_process').spawn('pip3', ['--version']);
+        var isCallBackDone = false;
+        var result = '';
+        spawn_3.on('error', function (err) {
+            if (!isCallBackDone) {
+                isCallBackDone = true;
+                return callback(err, null);
+            }
+        });
+        spawn_3.stdout.on('data', function (data) {
+            result = result + data;
+        });
+        spawn_3.stderr.on('data', function (data) {
+            result = result + data;
+        });
+        spawn_3.on('close', function (data) {
+            data = result.toString().split('\n')[0].split('\r')[0];
+            var pythonVersion = new RegExp('pip').test(data) ? data.split(' ')[1].replace(/"/g, '') : false;
+            if (pythonVersion !== false) {
+                if (!isCallBackDone) {
+                    isCallBackDone = true;
+                    return callback(null, pythonVersion);
+                }
+            }
+            else {
+                if (!isCallBackDone) {
+                    isCallBackDone = true;
+                    return callback(null, null);
+                }
+            }
+        });
+    }
+    catch (error) {
+        return callback(null, null);
+    }
+}
 function getNpmVersion(callback) {
     try {
         if (process.platform === 'darwin') {
@@ -1306,3 +1433,33 @@ function askForScheduing(cmd,chrmdriverPath,language,framework){
         });
 
     }
+
+
+    function printReportPath(framework,projectPath){
+        console.log('');
+        console.log('')   
+        console.log("----------------------------------------------------------------------------------------------");
+        console.log(" Report Path ")
+        console.log("----------------------------------------------------------------------------------------------");
+        console.log('')   
+          if (framework !== 'robot') {
+                fs.readFile(projectPath+'/test-results/meta-info.json', (err, data) => {
+                    if (err) throw err;
+                    let student = JSON.parse(data);
+                    var lastValue = student['reports'];
+                  
+                    if (lastValue !== undefined) {
+                        var lastDirName = lastValue[0].dir;
+                        if (lastDirName !== undefined) {
+                            console.log(projectPath+"/"+ lastDirName.replace('/json', ''));
+                            console.log('')   
+                            console.log("----------------------------------------------------------------------------------------------");
+                        }
+                    }
+                });
+            } else {
+                console.log(projectPath + "/report.html");
+                console.log('')   
+                console.log("----------------------------------------------------------------------------------------------");
+            }
+        }
