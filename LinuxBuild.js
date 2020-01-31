@@ -1498,9 +1498,9 @@ function askForScheduing(cmd,chrmdriverPath,language,framework){
     }
 
 function printReportPath(framework,projectPath){
-    console.log("---------------------------------------------------------------------------------------------------------------------------");
+    console.log("----------------------------------------------------------------------------------------------");
     console.log(" Report Path ")
-    console.log("---------------------------------------------------------------------------------------------------------------------------");
+    console.log("----------------------------------------------------------------------------------------------");
   
       if (framework !== 'robot') {
             fs.readFile(projectPath+'/test-results/meta-info.json', (err, data) => {
@@ -1512,12 +1512,12 @@ function printReportPath(framework,projectPath){
                     var lastDirName = lastValue[0].dir;
                     if (lastDirName !== undefined) {
                         console.log(projectPath+"/"+ lastDirName.replace('/json', ''));
+                        console.log("----------------------------------------------------------------------------------------------");
                     }
                 }
             });
         } else {
             console.log(projectPath + "/report.html");
+            console.log("----------------------------------------------------------------------------------------------");
         }
-        console.log("---------------------------------------------------------------------------------------------------------------------------");
-
     }
