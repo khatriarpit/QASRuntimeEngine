@@ -376,7 +376,8 @@ function doJavaScriptExecution(path, framework, language) {
 function executePythonExtraCommand(path, framework, language) {
     
     var pipalias='';
-    if(!(response['python3'] === null || response['python3'] === '' || response['python3'] === 'undefined')){
+    if(!((response['python3'] === null || response['python3'] === '' || response['python3'] === 'undefined') 
+    && (response['pip3'] === null || response['pip3'] === '' || response['pip3'] === 'undefined')) ){
         pipalias='3';
     }
     process.chdir(path);
@@ -896,6 +897,7 @@ function getInstalledToolsInformation() {
                             response['python3'] = version;
                             getPip3Version(function (err, version) {
                                 // console.log("pip: " + version);
+                                response['pip3'] = version;
                     getNpmVersion(function (err, version) {
                         // console.log("npm: " + version);
                         response['npm'] = version;
@@ -1462,4 +1464,30 @@ function askForScheduing(cmd,chrmdriverPath,language,framework){
                 console.log('')   
                 console.log("----------------------------------------------------------------------------------------------");
             }
+        }
+
+
+function doYouWantToExit() {
+            console.log("");
+            console.log("");
+            var againExecution="";
+            inquirer
+                .prompt([{
+                    type: "list",
+                    name: 'reptiles',
+                    prefix: '>',
+                    name: "Process Completed ,Do you want to execute again ?",
+                    choices: ['yes', 'no']
+    
+                }])
+                .then(answers => {
+                    againExecution = answers["Process Completed ,Do you want to execute again ?"].reptiles;
+                    if (againExecution !== undefined && againExecution !== '' && againExecution !== null) {
+                            if(againExecution === 'yes'){
+                                    testings();
+                            }else{
+                                process.exit(1);
+                            }
+                    } 
+                });
         }
