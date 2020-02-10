@@ -31,8 +31,8 @@ function testings() {
 	console.log('');
 	// getInstalledToolsInformation();
 	getInstalledToolsInformation(function a(response) {
-		console.log(response);
-		shell.exec("cmd /k QAS CLI");
+		// console.log(response);
+		// /shell.exec("cmd /k QAS CLI");
 	process.env['qasHeadlessMode'] = 'true';
 	if (inputProjectMode === 'local System') {
 		checkoutFromLocalRepository();
@@ -513,7 +513,13 @@ function executionCommandJava(path ,chromePath, framework, language) {
 							shell.exec('mvn  -Dtest=tests.web.*.*Test,tests.mobileweb.*.*Test -DfailIfNoTests=false -Dwebdriver.chrome.driver=' + chromePath + " test", function (err) {
 								if (err) {
 									revertModificationOfheadless(framework ,language);
-									doYouWantToExit();
+									if(err.toString() === '1'){
+										printReportPath(framework,path,(returnvalue)=> {
+											doYouWantToExit();
+										}); 
+									}else{
+										doYouWantToExit();
+									}
 								}else{
 									// askForScheduing(cmdJavaScript,chromePath,language,framework);
 									revertModificationOfheadless(framework,language);
@@ -531,7 +537,13 @@ function executionCommandJava(path ,chromePath, framework, language) {
 									// printReportPath(framework,path,(returnvalue)=> {
 									// 	doYouWantToExit();
 									// });
+									if(err.toString() === '1'){
+										printReportPath(framework,path,(returnvalue)=> {
+											doYouWantToExit();
+										}); 
+									}else{
 									doYouWantToExit();
+									}
 								
 								}else{
 									// askForScheduing(cmdJavaScript,chromePath,language,framework);
@@ -551,10 +563,17 @@ function executionCommandJava(path ,chromePath, framework, language) {
 						shell.exec(cmdJavaScript + ' -Dwebdriver.chrome.driver=' + chromePath, function (err) {
 							if (err) {
 								revertModificationOfheadless(framework ,language);
+								if(err.toString() === '1'){
+									printReportPath(framework,path,(returnvalue)=> {
+										doYouWantToExit();
+									}); 
+								}else{
+									doYouWantToExit();
+								}
 							/* 	printReportPath(framework,path,(returnvalue)=> {
 									doYouWantToExit();
 								}); */
-								doYouWantToExit();
+								
 							}else{
 								// askForScheduing(cmdJavaScript,chromePath,language,framework);
 								revertModificationOfheadless(framework,language);
@@ -569,8 +588,21 @@ function executionCommandJava(path ,chromePath, framework, language) {
 				} else {
 					// var existingPath = shell.exec("echo %PATH%");
 						shell.env["chromedriver"] =chromePath;
+						
 					if(framework==='robot'){
-						if(cmdJavaScript.toLowerCase() === 'robot tests'){
+					var upload='';
+					var isValidPythonCmd=false;
+					if(cmdJavaScript.toLowerCase() === "robot --listener python_listener.py --xunit result.xml tests"){
+							upload='--listener python_listener.py --xunit result.xml';
+							isValidPythonCmd=true;
+					}else if(cmdJavaScript.toLowerCase() === 'robot tests'){
+							upload='';
+							isValidPythonCmd=true;
+					}else{
+							console.log('Sorry ,Command not found .');
+							executionCommandJava(path,chromePath,framework,language);
+					}
+					if(isValidPythonCmd){
 						var isweb=false;
 						var isMob=false;
 						var robotWeburl=path+"/tests/web";
@@ -589,13 +621,16 @@ function executionCommandJava(path ,chromePath, framework, language) {
 						if(!isMob && !isweb){
 							console.log('No tests available to run .');
 						}else{
-							shell.exec("robot \""+robotMobUrl+'\"  \"'+robotWeburl+'\"' , function (err) {
+							shell.exec("robot "+upload +" \""+robotMobUrl+'\"  \"'+robotWeburl+'\"' , function (err) {
 								if (err) {
 									revertModificationOfheadless(framework,language);
-									doYouWantToExit();
-								/* 	printReportPath(framework,path,(returnvalue)=> {
+									if(err.toString() === '1'){
+										printReportPath(framework,path,(returnvalue)=> {
+											doYouWantToExit();
+										}); 
+									}else{
 										doYouWantToExit();
-									}); */
+									}
 								}else{
 									revertModificationOfheadless(framework,language);
 									printReportPath(framework,path,(returnvalue)=> {
@@ -604,16 +639,18 @@ function executionCommandJava(path ,chromePath, framework, language) {
 								}
 							});
 						}
-					}else{
-							console.log('Sorry ,Command not found .');
-								// shell.exit(1);
-								executionCommandJava(path,chromePath,framework,language);
 					}
 					}else{
 					shell.exec(cmdJavaScript , function (err) {
 						if (err) {
 							revertModificationOfheadless(framework,language);
+							if(err.toString() === '1'){
+								printReportPath(framework,path,(returnvalue)=> {
+									doYouWantToExit();
+								}); 
+							}else{
 							doYouWantToExit();
+							}
 						/* 	printReportPath(framework,path,(returnvalue)=> {
 								doYouWantToExit();
 							}); */
