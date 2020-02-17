@@ -34,6 +34,7 @@ function testings() {
 		// console.log(response);
 		// /shell.exec("cmd /k QAS CLI");
 	process.env['qasHeadlessMode'] = 'true';
+	process.title='QAS CLI';
 	if (inputProjectMode === 'local System') {
 		checkoutFromLocalRepository();
 	} else if (inputProjectMode === 'Version control') {
@@ -140,11 +141,16 @@ function gitCheckoutWithInquer(cmdPerform, path) {
 					console.log("Please refer readme.md file in QAS for headless execution .");
 					doJavaScriptExecution(exports.projectPath, framework, language);
 				}else{
-					if(checkExistingPlatform(exports.projectPath)){
-						loadPropertiesFromEachPath(exports.projectPath + "/resources/", true);
-						doJavaScriptExecution(exports.projectPath, framework, language);
+					if(checkExistingDriverName(exports.projectPath,'chromedriver',language,framework)){
+							if(checkExistingPlatform(exports.projectPath)){
+								loadPropertiesFromEachPath(exports.projectPath + "/resources/", true);
+								doJavaScriptExecution(exports.projectPath, framework, language);
+							}else{
+								console.log("Project platform is not supported by QAS CLI");
+								doYouWantToExit();
+							}
 					}else{
-						console.log("Project platform is not supported by QAS CLI");
+						console.log("Enter valid QAS supported driver.name .!");
 						doYouWantToExit();
 					}
 				}
@@ -168,14 +174,19 @@ function gitCheckoutWithInquer(cmdPerform, path) {
 					executePythonExtraCommand(exports.projectPath,framework,language);
 					// doJavaScriptExecution(exports.projectPath, framework, language);
 				} else {
-					if(checkExistingPlatform(exports.projectPath)){
-						changePythonBehaveProperties(exports.projectPath, true);
-						executePythonExtraCommand(exports.projectPath,framework,language);
-						// doJavaScriptExecution(exports.projectPath, framework, language);
-						}else{
-							console.log("Project platform is not supported by QAS CLI");
+					if(checkEnviornmentDriverName(exports.projectPath,'chromedriver',framework)){
+							if(checkExistingPlatform(exports.projectPath)){
+								changePythonBehaveProperties(exports.projectPath, true);
+								executePythonExtraCommand(exports.projectPath,framework,language);
+								// doJavaScriptExecution(exports.projectPath, framework, language);
+							}else{
+								console.log("Project platform is not supported by QAS CLI");
+								doYouWantToExit();
+							}
+					}else{
+							console.log("Enter valid QAS supported driver.name .!");
 							doYouWantToExit();
-						}
+					}
 				}
 			}else{
 				doYouWantToExit();
@@ -189,8 +200,13 @@ function gitCheckoutWithInquer(cmdPerform, path) {
 				if(isValid){
 				if(checkExistingPlatform(exports.projectPath)){
 				if (framework === 'cucumber') {
-					loadPropertiesFromEachPathTSJS(exports.projectPath + "/resources/", true);
-					executeExtraCommand(exports.projectPath, framework, language);
+					if(checkExistingDriverName(exports.projectPath,'chromedriver',language,framework)){
+						loadPropertiesFromEachPathTSJS(exports.projectPath + "/resources/", true);
+						executeExtraCommand(exports.projectPath, framework, language);
+					}else{
+						console.log("Enter valid QAS supported driver.name .!");
+						doYouWantToExit();
+					}
 				} else {
 					changeJasminProperties(exports.projectPath, true);
 					executeExtraCommand(exports.projectPath, framework, language);
@@ -210,8 +226,13 @@ function gitCheckoutWithInquer(cmdPerform, path) {
 				if(isValid){
 								if(checkExistingPlatform(exports.projectPath)){
 								if (framework === 'cucumber') {
-									loadPropertiesFromEachPathTSJS(exports.projectPath + "/resources/", true);
-									executeExtraCommand(exports.projectPath, framework, language);
+									if(checkExistingDriverName(exports.projectPath,'chromedriver',language,framework)){
+										loadPropertiesFromEachPathTSJS(exports.projectPath + "/resources/", true);
+										executeExtraCommand(exports.projectPath, framework, language);
+									}else{
+										console.log("Enter valid QAS supported driver.name .!");
+										doYouWantToExit();
+									}
 								} else {
 									changeJasminTypeScriptProperties(exports.projectPath, true);
 									executeExtraCommand(exports.projectPath, framework, language);
@@ -271,6 +292,7 @@ function checkoutFromLocalRepository() {
 							console.log("Please refer readme.md file in QAS for headless execution .");
 							doJavaScriptExecution(path, framework, language);
 						}else{
+						if(checkExistingDriverName(path,'chromedriver',language,framework)){
 							if(checkExistingPlatform(path)){
 								loadPropertiesFromEachPath(path + "/resources/", true);
 								doJavaScriptExecution(path, framework, language);
@@ -278,7 +300,11 @@ function checkoutFromLocalRepository() {
 								console.log("Project platform is not supported by QAS CLI");
 								doYouWantToExit();
 							}
+						}else{
+							console.log("Enter valid QAS supported driver.name .!");;
+							doYouWantToExit();
 						}
+					}
 					}else{
 						doYouWantToExit();
 					}
@@ -299,6 +325,7 @@ function checkoutFromLocalRepository() {
 								executePythonExtraCommand(path,framework,language);
 								// doJavaScriptExecution(path, framework, language);
 							} else {
+							if(checkEnviornmentDriverName(exports.projectPath,'chromedriver',framework)){
 								if(checkExistingPlatform(path)){
 									changePythonBehaveProperties(path, true);
 									executePythonExtraCommand(path,framework,language);
@@ -306,6 +333,11 @@ function checkoutFromLocalRepository() {
 								}else{
 									console.log("Project platform is not supported by QAS CLI");
 									doYouWantToExit();
+								}
+
+							}else{
+								console.log("Enter valid QAS supported driver.name .!");
+								doYouWantToExit();
 								}
 							}
 						}else{
@@ -320,8 +352,13 @@ function checkoutFromLocalRepository() {
 						if(isValid){
 							if(checkExistingPlatform(path)){
 									if (framework === 'cucumber') {
-										loadPropertiesFromEachPathTSJS(path + "/resources/", true);
-										executeExtraCommand(path, framework, language);
+										if(checkExistingDriverName(path,'chromedriver',language,framework)){
+											loadPropertiesFromEachPathTSJS(path + "/resources/", true);
+											executeExtraCommand(path, framework, language);
+										}else{
+											console.log("Enter valid QAS supported driver.name .!");
+											doYouWantToExit();
+									}
 									} else {
 										changeJasminProperties(path, true);
 										executeExtraCommand(path, framework, language);
@@ -343,8 +380,13 @@ function checkoutFromLocalRepository() {
 						if(isValid){
 						if(checkExistingPlatform(path)){
 							if (framework === 'cucumber') {
-								loadPropertiesFromEachPathTSJS(path + "/resources/", true);
-								executeExtraCommand(path, framework, language);
+								if(checkExistingDriverName(path,'chromedriver',language,framework)){
+									loadPropertiesFromEachPathTSJS(path + "/resources/", true);
+									executeExtraCommand(path, framework, language);
+								}else{
+									console.log("Enter valid QAS supported driver.name .!");
+									doYouWantToExit();
+								}
 							} else {
 								changeJasminTypeScriptProperties(path, true);
 								executeExtraCommand(path, framework, language);
@@ -414,10 +456,13 @@ function executeExtraCommand(path, framework, language) {
 	process.chdir(path);
 	console.log("Please wait while installing required dependencies .");
 	shell.exec("npm install");
-	shell.exec("npm install protractor --save-dev");
+	shell.exec("npm install protractor@latest --save-dev");
 	shell.exec("npm install -g tsc");
 	if (framework === 'cucumber') {
 		shell.exec("npm run webdriver-update"); //cucumber
+		if (language == 'typescript') {
+			shell.exec("npm run build"); 
+		}
 	}
 	if (framework === 'jasmine') {
 		shell.exec("npm run prepare"); //jasmine
@@ -426,7 +471,7 @@ function executeExtraCommand(path, framework, language) {
 		}
 	}
 	shell.exec("npm run updatechrome");
-
+	process.title='QAS CLI';
 	executionCommandJavaScritpTypescript(path1, framework, language);
 }
 function executePythonExtraCommand(path, framework, language) {
@@ -436,7 +481,7 @@ function executePythonExtraCommand(path, framework, language) {
 		pipalias='3';
 	}
 	process.chdir(path);
-	console.log("Please Wait .Installing required dependencies .");
+	console.log("Please Wait while installing required dependencies .");
 	shell.exec("pip"+pipalias +" install -r requirements.txt");
 	if(framework === 'robot'){
 		shell.exec("pip"+pipalias +" install robotframework");
@@ -456,13 +501,24 @@ function executionCommandJavaScritpTypescript(path, framework, language) {
 		.then(answers => {
 			cmdJavaScript = answers['Enter Command for Execution'];
 			if (cmdJavaScript !== null && cmdJavaScript !== undefined && cmdJavaScript !== '') {
-				shell.exec(cmdJavaScript , function (err) {
-					if (err) {
+				shell.exec(cmdJavaScript , function (code, stdout, stderr) {
+					if (stderr) {
+						// console.log(">>>>>>>>>>>>>> "+stdout.toString().indexOf('Cucumber HTML report '));
+						// console.log("Not Recognize  "+stderr.toString().indexOf('is not recognized'));
+						// console.log("npm ERR!  "+stderr.toString().indexOf('npm ERR!'));
+						// console.log("npm ERR! Test failed.  "+stderr.toString().indexOf('npm ERR! Test failed.'));
 						revertJSTSModificationOfheadless(framework ,language,path);
-						// printReportPath(framework,path,(returnvalue)=> {
-						// 	doYouWantToExit();
-						// });
-						doYouWantToExit();
+						if(stdout.toString().indexOf('Cucumber HTML report ') >= 1){
+							printReportPath(framework,path,(returnvalue)=> {
+								doYouWantToExit();
+							});
+						}else if (stdout.toString().indexOf('Finished in ') >= 1){
+							printReportPath(framework,path,(returnvalue)=> {
+								doYouWantToExit();
+							});
+						}else{
+							doYouWantToExit();
+						}
 					}else{
 						revertJSTSModificationOfheadless(framework,language,path);
 						printReportPath(framework,path,(returnvalue)=> {
@@ -510,10 +566,10 @@ function executionCommandJava(path ,chromePath, framework, language) {
 					if(framework==='junit'){
 						if(cmdJavaScript.toLowerCase().indexOf('test') > -1){
 							// console.log('mvn  -Dtest=tests.web.*.*Test,tests.mobileweb.*.*Test -Dwebdriver.chrome.driver=' + chromePath + " site");
-							shell.exec('mvn  -Dtest=tests.web.*.*Test,tests.mobileweb.*.*Test -DfailIfNoTests=false -Dwebdriver.chrome.driver=' + chromePath + " test", function (err) {
-								if (err) {
+							shell.exec('mvn  -Dtest=tests.web.*.*Test,tests.mobileweb.*.*Test -DfailIfNoTests=false -Dwebdriver.chrome.driver=' + chromePath + " test", function (code, stdout, stderr) {
+								if (stderr) {
 									revertModificationOfheadless(framework ,language);
-									if(err.toString() === '1'){
+									if(code !==1  || stderr.toString().indexOf('is not recognized')<= -1){
 										printReportPath(framework,path,(returnvalue)=> {
 											doYouWantToExit();
 										}); 
@@ -531,13 +587,13 @@ function executionCommandJava(path ,chromePath, framework, language) {
 							});
 							}else if(cmdJavaScript.toLowerCase().indexOf('site') > -1) {
 											// console.log('mvn  -Dtest=tests.web.*.*Test,tests.mobileweb.*.*Test -Dwebdriver.chrome.driver=' + chromePath + " site");
-							shell.exec('mvn  -Dtest=tests.web.*.*Test,tests.mobileweb.*.*Test -DfailIfNoTests=false -Dwebdriver.chrome.driver=' + chromePath + " site", function (err) {
-								if (err) {
+							shell.exec('mvn  -Dtest=tests.web.*.*Test,tests.mobileweb.*.*Test -DfailIfNoTests=false -Dwebdriver.chrome.driver=' + chromePath + " site", function (code, stdout, stderr) {
+								if (stderr) {
 									revertModificationOfheadless(framework ,language);
 									// printReportPath(framework,path,(returnvalue)=> {
 									// 	doYouWantToExit();
 									// });
-									if(err.toString() === '1'){
+									if(code !==1  || stderr.toString().indexOf('is not recognized')<= -1){
 										printReportPath(framework,path,(returnvalue)=> {
 											doYouWantToExit();
 										}); 
@@ -555,25 +611,20 @@ function executionCommandJava(path ,chromePath, framework, language) {
 								}
 							});
 							}else{
-								console.log('Sorry ,Command not found .');
-								// shell.exit(1);
-								executionCommandJava(path,chromePath,framework,language);
+								console.log(cmdJavaScript + 'is not recognized as an internal or external command, \n operable program or batch file.');
+								doYouWantToExit();
 							}
 					}else{
-						shell.exec(cmdJavaScript + ' -Dwebdriver.chrome.driver=' + chromePath, function (err) {
-							if (err) {
+						shell.exec(cmdJavaScript + ' -Dwebdriver.chrome.driver=' + chromePath, function (code, stdout, stderr) {
+							if (stderr) {
 								revertModificationOfheadless(framework ,language);
-								if(err.toString() === '1'){
+								if(code !==1  || stderr.toString().indexOf('is not recognized')<= -1){
 									printReportPath(framework,path,(returnvalue)=> {
 										doYouWantToExit();
 									}); 
 								}else{
 									doYouWantToExit();
 								}
-							/* 	printReportPath(framework,path,(returnvalue)=> {
-									doYouWantToExit();
-								}); */
-								
 							}else{
 								// askForScheduing(cmdJavaScript,chromePath,language,framework);
 								revertModificationOfheadless(framework,language);
@@ -599,8 +650,8 @@ function executionCommandJava(path ,chromePath, framework, language) {
 							upload='';
 							isValidPythonCmd=true;
 					}else{
-							console.log('Sorry ,Command not found .');
-							executionCommandJava(path,chromePath,framework,language);
+							console.log(cmdJavaScript + 'is not recognized as an internal or external command, \n operable program or batch file.');
+							doYouWantToExit();
 					}
 					if(isValidPythonCmd){
 						var isweb=false;
@@ -621,14 +672,16 @@ function executionCommandJava(path ,chromePath, framework, language) {
 						if(!isMob && !isweb){
 							console.log('No tests available to run .');
 						}else{
-							shell.exec("robot "+upload +" \""+robotMobUrl+'\"  \"'+robotWeburl+'\"' , function (err) {
-								if (err) {
+							shell.exec("robot "+upload +" \""+robotMobUrl+'\"  \"'+robotWeburl+'\"' , function (code, stdout, stderr) {
+								if (stderr) {
 									revertModificationOfheadless(framework,language);
-									if(err.toString() === '1'){
-										printReportPath(framework,path,(returnvalue)=> {
+									// console.log(">>>HTML>>>>>"+stdout.toString().indexOf('report.html'));
+									// console.log(">>Report>>>>>>"+stdout.toString().indexOf('Report:  '));
+									if ((stdout.toString().indexOf('report.html') >= 1) && (stdout.toString().indexOf('Report:  ' >= 1))) {
+										printReportPath(framework, path, (returnvalue) => {
 											doYouWantToExit();
-										}); 
-									}else{
+										});
+									} else {
 										doYouWantToExit();
 									}
 								}else{
@@ -641,24 +694,32 @@ function executionCommandJava(path ,chromePath, framework, language) {
 						}
 					}
 					}else{
-					shell.exec(cmdJavaScript , function (err) {
-						if (err) {
+					shell.exec(cmdJavaScript , function (code, stdout, stderr) {
+						if (stderr) {
 							revertModificationOfheadless(framework,language);
-							if(err.toString() === '1'){
+							// console.log("---------------------------- Took 0m0.000s "+stdout.toString().indexOf('Took 0m0.000s'));
+							// console.log("---------------------------- Took  "+stdout.toString().indexOf('Took '));
+							if (stdout.toString().indexOf('Took ') >= 1) {
 								printReportPath(framework,path,(returnvalue)=> {
 									doYouWantToExit();
 								}); 
 							}else{
-							doYouWantToExit();
+								doYouWantToExit();
 							}
 						/* 	printReportPath(framework,path,(returnvalue)=> {
 								doYouWantToExit();
 							}); */
 						}else{
-							revertModificationOfheadless(framework,language);
-							printReportPath(framework,path,(returnvalue)=> {
+							// console.log("1---------------------------- Took 0m0.000s " + stdout.toString().indexOf('Took 0m0.000s'));
+							// console.log("12---------------------------- Took  " + stdout.toString().indexOf('Took '));
+							revertModificationOfheadless(framework, language);
+							if (stdout.toString().indexOf('Took 0m0.000s') <= -1) {
+								printReportPath(framework, path, (returnvalue) => {
+									doYouWantToExit();
+								});
+							} else {
 								doYouWantToExit();
-							});
+							}
 						}
 					});
 					}
@@ -705,6 +766,53 @@ function checkExistingPlatform(path){
 		console.log("Project is Invalid .");
 		return false;
 	}
+}
+function checkExistingDriverName(path,driver ,projectType,framework){
+	if (checkDirectorySync(path+ '/resources/application.properties')) {
+		var properties = PropertiesReader(path + '/resources/application.properties');
+		var driverName=properties.get('driver.name');
+		if((driverName === '' || driverName === undefined || driverName === null) ){
+			return false;
+		}else if(driverName.toLowerCase() !==driver.toLowerCase()){
+			return false;
+		}else{
+			if(projectType === 'java'){
+				var temp=checkEnviornmentDriverName(path,driver,framework);
+				return temp;
+			}else{
+				return true; //Don't Do for TS JS
+			}
+		}
+	} 
+	else {
+		console.log("Project is Invalid .");
+		return false;
+	}
+}
+
+function checkEnviornmentDriverName(path,driver,framework){
+	var isExist=false;
+		var platforms;
+			if(framework!== 'qaf'){
+				platforms = ['web', 'mobileweb'];
+			}else{
+				platforms =['web'];
+			}
+	   platforms.forEach(function (element) {
+			var platformDir = path + "/resources/" + element + "/";
+				if (fs.existsSync(platformDir)) {
+					var properties = PropertiesReader(platformDir + "env.properties");
+					var driverName=properties.get('driver.name');
+					if((driverName === '' || driverName === undefined || driverName === null) ){
+						isExist=false;
+					}else if(driverName.toLowerCase() !==driver.toLowerCase()){
+						isExist=false;
+					}else{
+						isExist=true;
+					}
+				}
+		   });
+		   return isExist;
 }
 function setDriver(chrmdriver) {
 	if (checkDirectorySync(exports.projectPath + '/resources/application.properties')) {
@@ -1473,6 +1581,7 @@ function askForScheduing(cmd,chrmdriverPath,language,framework){
 	}
 	
 	function  doYouWantToExit() {
+		process.title='QAS CLI';
 		console.log("");
 		console.log("");
 		var againExecution="";
