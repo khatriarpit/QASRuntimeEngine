@@ -459,8 +459,7 @@ function executionCommandJava(path,chromePath, framework, language) {
         .then(answers => {
             cmdJavaScript = answers['Enter Command for Execution'];
             if (cmdJavaScript !== null && cmdJavaScript !== undefined && cmdJavaScript !== '') {
-                var existingPath = shell.exec("echo $PATH");
-                shell.env["PATH"] = existingPath + ':' + chromePath;
+            
                 // shell.exec(cmdJavaScript);
                 if(language==='java'){
                     if(framework==='junit'){
@@ -505,6 +504,8 @@ function executionCommandJava(path,chromePath, framework, language) {
                             });
                          }
             }else{
+                var existingPath = shell.exec("echo $PATH");
+                shell.env["PATH"] = existingPath + ':' + chromePath;
                 if(framework==='robot'){
                     var isweb=false;
                     var isMob=false;
