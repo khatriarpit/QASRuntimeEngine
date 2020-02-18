@@ -49,6 +49,29 @@ function testings() {
 });
 }
 
+
+function selectBrowser() {
+	var selectedWebDriver;
+	inquirer
+	.prompt([{
+		type: "list",
+		name: 'reptiles',
+		prefix: '>',
+		message: "Select webdriver to run CLI.",
+		choices: ['ChromeDriver', 'FirefoxDriver'],
+	}])
+	.then(answers => {
+		selectedWebDriver = answers.reptiles;
+			if (path !== undefined && path !== '' && path !== null) {
+					//Call Flow of System..
+			} //check
+			else {
+				selectBrowser();
+			}
+		});
+	
+}
+
 function gitCheckout() {
 	var path;
 	var isValid=true;
@@ -1640,37 +1663,53 @@ function validateTime(obj) {
 	return true;
 }
 
-function printReportPath(framework,projectPath,callback){
-    console.log('');
-    console.log('')   
-    console.log("----------------------------------------------------------------------------------------------");
-    console.log(" Report Path ")
-    console.log("----------------------------------------------------------------------------------------------");
-    console.log('')   
-      if (framework !== 'robot') {
-            fs.readFile(projectPath+'/test-results/meta-info.json', (err, data) => {
-                if (err) throw err;
-                let student = JSON.parse(data);
-                var lastValue = student['reports'];
-              
-                if (lastValue !== undefined) {
-                    var lastDirName = lastValue[0].dir;
-                    if (lastDirName !== undefined) {
-                        console.log(projectPath+"/"+ lastDirName.replace('/json', ''));
-                        console.log('')   
-						console.log("----------------------------------------------------------------------------------------------");
-						callback(true);
-                    }
-                }
-			});
-        } else {
-            console.log(projectPath + "/report.html");
-            console.log('')   
+function printReportPath(framework, projectPath, callback) {
+	if (framework !== 'robot') {
+		if (checkDirectorySync(projectPath + '/test-results/meta-info.json')) {
+			console.log('');
+			console.log('')
 			console.log("----------------------------------------------------------------------------------------------");
-			callback(true);
-		}
+			console.log(" Report Path ")
+			console.log("----------------------------------------------------------------------------------------------");
+			console.log('')
+			if (framework !== 'robot') {
+				fs.readFile(projectPath + '/test-results/meta-info.json', (err, data) => {
+					if (err) { };
+					let student = JSON.parse(data);
+					var lastValue = student['reports'];
 
+					if (lastValue !== undefined) {
+						var lastDirName = lastValue[0].dir;
+						if (lastDirName !== undefined) {
+							console.log(projectPath + "/" + lastDirName.replace('/json', ''));
+							console.log('')
+							console.log("----------------------------------------------------------------------------------------------");
+							callback(true);
+						}
+					}
+				});
+			} else {
+				console.log(projectPath + "/report.html");
+				console.log('')
+				console.log("----------------------------------------------------------------------------------------------");
+				callback(true);
+			}
+		} else {
+			doYouWantToExit();
+		}
+	} else {
+		console.log('');
+		console.log('')
+		console.log("----------------------------------------------------------------------------------------------");
+		console.log(" Report Path ")
+		console.log("----------------------------------------------------------------------------------------------");
+		console.log('')
+		console.log(projectPath + "/report.html");
+		console.log('')
+		console.log("----------------------------------------------------------------------------------------------");
+		callback(true);
 	}
+}
 	
 
 	function wait(ms){

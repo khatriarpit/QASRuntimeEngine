@@ -427,7 +427,7 @@ function doJavaScriptExecution(path, framework, language) {
         }])
         .then(answers => {
             chromePath = answers["Enter ChromeDriver path"];
-            if (chromePath !== null && chromePath !== undefined && chromePath !== '') {
+            if (chromePath.trim() !== null && chromePath.trim() !== undefined && chromePath.trim() !== '') {
                 // executionCommandJava(path,chromePath, framework, language);
                 var spawn_9 = require('child_process').spawn(chromePath.trim(), ['-version']);
                 spawn_9.on('error', function (err) {
@@ -561,7 +561,7 @@ function executionCommandJava(path, chromePath, framework, language) {
                             shell.exec('mvn  -Dtest=tests.web.*.*Test,tests.mobileweb.*.*Test -DfailIfNoTests=false -Dwebdriver.chrome.driver=' + chromePath + " test", function (code, stdout, stderr) {
                                 if (stderr) {
                                     revertModificationOfheadless(framework, language);
-                                    if (code !== 1 || stderr.toString().indexOf('is not recognized') <= -1) {
+                                    if (code !== 1 || stderr.toString().indexOf('command not found') <= -1) {
                                         printReportPath(framework, path, (returnvalue) => {
                                             doYouWantToExit();
                                         });
@@ -580,7 +580,7 @@ function executionCommandJava(path, chromePath, framework, language) {
                             shell.exec('mvn  -Dtest=tests.web.*.*Test,tests.mobileweb.*.*Test -DfailIfNoTests=false -Dwebdriver.chrome.driver=' + chromePath + " site", function (code, stdout, stderr) {
                                 if (stderr) {
                                     revertModificationOfheadless(framework, language);
-                                    if (code !== 1 || stderr.toString().indexOf('is not recognized') <= -1) {
+                                    if (code !== 1 || stderr.toString().indexOf('command not found') <= -1) {
                                         printReportPath(framework, path, (returnvalue) => {
                                             doYouWantToExit();
                                         });
@@ -595,14 +595,14 @@ function executionCommandJava(path, chromePath, framework, language) {
                                 }
                             });
                         } else {
-                            console.log(cmdJavaScript + 'is not recognized as an internal or external command, \n operable program or batch file.');
+                            console.log(cmdJavaScript + ' command not found.');
                             doYouWantToExit();
                         }
                     } else {
                         shell.exec(cmdJavaScript + ' -Dwebdriver.chrome.driver=' + chromePath, function (code, stdout, stderr) {
                             if (stderr) {
                                 revertModificationOfheadless(framework, language);
-                                if (code !== 1 || stderr.toString().indexOf('is not recognized') <= -1) {
+                                if (code !== 1 || stderr.toString().indexOf('command not found') <= -1) {
                                     printReportPath(framework, path, (returnvalue) => {
                                         doYouWantToExit();
                                     });
@@ -630,7 +630,7 @@ function executionCommandJava(path, chromePath, framework, language) {
                             upload = '';
                             isValidPythonCmd = true;
                         } else {
-                            console.log(cmdJavaScript + 'is not recognized as an internal or external command, \n operable program or batch file.');
+                            console.log(cmdJavaScript + ' command not found.');
                             doYouWantToExit();
                         }
                         if (isValidPythonCmd) {
@@ -671,6 +671,7 @@ function executionCommandJava(path, chromePath, framework, language) {
                                     }
                                 });
                             }
+                           }
                         } else {
                             shell.exec(cmdJavaScript, function (code, stdout, stderr) {
                                 if (stderr) {
@@ -694,7 +695,6 @@ function executionCommandJava(path, chromePath, framework, language) {
                                 }
                             });
                         }
-                    }
                 }
             } else {
                 executionCommandJava(path);
@@ -1576,33 +1576,50 @@ function askForScheduing(cmd,chrmdriverPath,language,framework){
 			});
 	}
 
-    function printReportPath(framework,projectPath,callback){
-        console.log('');
-        console.log('')   
-        console.log("----------------------------------------------------------------------------------------------");
-        console.log(" Report Path ")
-        console.log("----------------------------------------------------------------------------------------------");
-        console.log('')   
-          if (framework !== 'robot') {
-                fs.readFile(projectPath+'/test-results/meta-info.json', (err, data) => {
-                    if (err) throw err;
-                    let student = JSON.parse(data);
-                    var lastValue = student['reports'];
-                  
-                    if (lastValue !== undefined) {
-                        var lastDirName = lastValue[0].dir;
-                        if (lastDirName !== undefined) {
-                            console.log(projectPath+"/"+ lastDirName.replace('/json', ''));
-                            console.log('')   
-                            console.log("----------------------------------------------------------------------------------------------");
-                            callback(true);
-                        }
-                    }
-                });
-            } else {
-                console.log(projectPath + "/report.html");
-                console.log('')   
+function printReportPath(framework, projectPath, callback) {
+        if (framework !== 'robot') {
+            if (checkDirectorySync(projectPath + '/test-results/meta-info.json')) {
+                console.log('');
+                console.log('')
                 console.log("----------------------------------------------------------------------------------------------");
-                callback(true);
+                console.log(" Report Path ")
+                console.log("----------------------------------------------------------------------------------------------");
+                console.log('')
+                if (framework !== 'robot') {
+                    fs.readFile(projectPath + '/test-results/meta-info.json', (err, data) => {
+                        if (err) { };
+                        let student = JSON.parse(data);
+                        var lastValue = student['reports'];
+    
+                        if (lastValue !== undefined) {
+                            var lastDirName = lastValue[0].dir;
+                            if (lastDirName !== undefined) {
+                                console.log(projectPath + "/" + lastDirName.replace('/json', ''));
+                                console.log('')
+                                console.log("----------------------------------------------------------------------------------------------");
+                                callback(true);
+                            }
+                        }
+                    });
+                } else {
+                    console.log(projectPath + "/report.html");
+                    console.log('')
+                    console.log("----------------------------------------------------------------------------------------------");
+                    callback(true);
+                }
+            } else {
+                doYouWantToExit();
             }
+        } else {
+            console.log('');
+            console.log('')
+            console.log("----------------------------------------------------------------------------------------------");
+            console.log(" Report Path ")
+            console.log("----------------------------------------------------------------------------------------------");
+            console.log('')
+            console.log(projectPath + "/report.html");
+            console.log('')
+            console.log("----------------------------------------------------------------------------------------------");
+            callback(true);
         }
+    }
