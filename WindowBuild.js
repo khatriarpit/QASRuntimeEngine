@@ -655,10 +655,13 @@ function executionCommandJava(path ,chromePath, framework, language) {
 								}else{
 									// askForScheduing(cmdJavaScript,chromePath,language,framework);
 									revertModificationOfheadless(framework,language);
-									printReportPath(framework,path,(returnvalue)=> {
+									if (stdout.toString().indexOf('Tests run:') > -1) {
+										printReportPath(framework, path, (returnvalue) => {
+											doYouWantToExitWithOptions(path, chromePath, framework, language);
+										});
+									} else {
 										doYouWantToExitWithOptions(path, chromePath, framework, language);
-									});
-								
+									}
 								}
 							});
 							}else if(cmdJavaScript.toLowerCase().indexOf('site') > -1) {
@@ -679,11 +682,14 @@ function executionCommandJava(path ,chromePath, framework, language) {
 								
 								}else{
 									// askForScheduing(cmdJavaScript,chromePath,language,framework);
-									revertModificationOfheadless(framework,language);
-									printReportPath(framework,path,(returnvalue)=> {
+									revertModificationOfheadless(framework, language);
+									if (stdout.toString().indexOf('Tests run:') > -1) {
+										printReportPath(framework, path, (returnvalue) => {
+											doYouWantToExitWithOptions(path, chromePath, framework, language);
+										});
+									} else {
 										doYouWantToExitWithOptions(path, chromePath, framework, language);
-									});
-								
+									}
 								}
 							});
 							}else{
@@ -1785,7 +1791,7 @@ function doYouWantToExitWithOptions(path ,chromePath, framework, language) {
 			name: 'reptiles',
 			prefix: '>',
 			message: "Process completed. Please select ",
-			choices: ['Execute other project', 'Re-execute project', 'Quit']
+			choices: ['Execute other project', 'Execute with other command', 'Quit']
 
 
 		}])
@@ -1794,7 +1800,7 @@ function doYouWantToExitWithOptions(path ,chromePath, framework, language) {
 			if (againExecution !== undefined && againExecution !== '' && againExecution !== null) {
 				if (againExecution === 'Execute other project') {
 					testings();
-				} else if (againExecution === 'Re-execute project') {
+				} else if (againExecution === 'Execute with other command') {
 					if (language === 'java' || language === 'python') {
 						if(language==='java'){
 							if(framework !== 'junit'){
