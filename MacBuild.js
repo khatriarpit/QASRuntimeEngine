@@ -20,19 +20,19 @@ function testings() {
             type: "list",
             name: 'reptiles',
             prefix: '>',
-            message: "Choose Project to run on QAS CLI.",
-            choices: ['local System', 'Version control', 'Quit'],
+            message: "Choose project to run on QAS CLI.",
+            choices: ['Local system', 'Version control', 'Quit'],
         }])
         .then(answers => {
             inputProjectMode = answers.reptiles;
             console.log('');
             // getInstalledToolsInformation();
             getInstalledToolsInformation(function a(response) {
-                // console.log(response);
+              //  console.log(response);
                 // /shell.exec("cmd /k QAS CLI");
                 process.env['qasHeadlessMode'] = 'true';
                 process.title = 'QAS CLI';
-                if (inputProjectMode === 'local System') {
+                if (inputProjectMode === 'Local system') {
                     checkoutFromLocalRepository();
                 } else if (inputProjectMode === 'Version control') {
                     gitCheckout();
@@ -40,7 +40,7 @@ function testings() {
                     console.log("Thanks for using QAS CLI .. ");
                     return;
                 } else {
-                    console.log('Wrong Selection, Please select again');
+                    console.log('Wrong selection, Please select again');
                 }
             });
         });
@@ -85,11 +85,11 @@ function processGitClone(path) {
         .prompt([{
             type: "input",
             prefix: '>',
-            name: "Enter Git Clone Command"
+            name: "Enter git clone command"
         }])
         .then(answers => {
             var cmdPerform = '';
-            cmdPerform = answers["Enter Git Clone Command"];
+            cmdPerform = answers["Enter git clone command"];
             if (cmdPerform !== undefined && cmdPerform !== '' && cmdPerform !== null) {
                 gitCheckoutWithInquer(cmdPerform, path);
             } else {
@@ -109,7 +109,7 @@ function gitCheckoutWithInquer(cmdPerform, path) {
             console.log(err);
             processGitClone(path);
         } else {
-            console.log("Clone Repository successfully ..");
+            console.log("Clone repository successfully ..");
             // process.chdir(exports.projectPath);
             var projectDetailsFile = exports.projectPath + '/.qas-data/.project';
             if (checkDirectorySync(projectDetailsFile)) {
@@ -135,8 +135,14 @@ function gitCheckoutWithInquer(cmdPerform, path) {
                             loadPropertiesFromEachPath(exports.projectPath + "/resources/", true);
                         }
                         if (framework === 'junit') {
-                            console.log("Please refer readme.md file in QAS for headless execution .");
-                            doJavaScriptExecution(exports.projectPath, framework, language);
+                            checkJunitReadmeFile(exports.projectPath, function a(response) {
+                                if (response) {
+                                    doJavaScriptExecution(exports.projectPath, framework, language);
+                                } else {
+                                    console.log("Please update your project using QAS import project menu to run in QAS CLI.");
+                                    doYouWantToExit();
+                                }
+                            });
                         } else {
                             if (checkExistingDriverName(exports.projectPath, 'chromedriver', language, framework)) {
                                 if (checkExistingPlatform(exports.projectPath)) {
@@ -195,48 +201,70 @@ function gitCheckoutWithInquer(cmdPerform, path) {
                         isValid = false;
                     }
                     if (isValid) {
-                        if (checkExistingPlatform(exports.projectPath)) {
-                            if (framework === 'cucumber') {
-                                if (checkExistingDriverName(exports.projectPath, 'chromedriver', language, framework)) {
-                                    loadPropertiesFromEachPathTSJS(exports.projectPath + "/resources/", true);
-                                    executeExtraCommand(exports.projectPath, framework, language);
+                        var pathOfLatest = '';
+                        if (framework === 'jasmine') {
+                            pathOfLatest = '/base/updatechrome.js';
+                        } else {
+                            pathOfLatest = '/source/base/updatechrome.js';
+                        }
+                        if (checkDirectorySync(exports.projectPath + pathOfLatest)) {
+                            if (checkExistingPlatform(exports.projectPath)) {
+                                if (framework === 'cucumber') {
+                                    if (checkExistingDriverName(exports.projectPath, 'chromedriver', language, framework)) {
+                                        loadPropertiesFromEachPathTSJS(exports.projectPath + "/resources/", true);
+                                        executeExtraCommand(exports.projectPath, framework, language);
+                                    } else {
+                                        console.log("Enter valid QAS supported driver.name .!");
+                                        doYouWantToExit();
+                                    }
                                 } else {
-                                    console.log("Enter valid QAS supported driver.name .!");
-                                    doYouWantToExit();
+                                    changeJasminProperties(exports.projectPath, true);
+                                    executeExtraCommand(exports.projectPath, framework, language);
                                 }
                             } else {
-                                changeJasminProperties(exports.projectPath, true);
-                                executeExtraCommand(exports.projectPath, framework, language);
+                                console.log("Project platform is not supported by QAS CLI");
+                                doYouWantToExit();
                             }
                         } else {
-                            console.log("Project platform is not supported by QAS CLI");
                             doYouWantToExit();
                         }
                     } else {
+                        console.log("Please update your project using QAS import project menu to run in QAS CLI.");
                         doYouWantToExit();
                     }
                 }else if (language !== undefined && language !== '' && language === 'typescript') {
-                    var isValid=true;
+                    var isValid = true;
                     if (response['npm'] === null || response['npm'] === '' || response['npm'] === 'undefined') {
                         shell.echo('QAS CLI requires npm for Execution . Please install npm first .');
                         isValid = false;
                     }
                     if (isValid) {
-                        if (checkExistingPlatform(exports.projectPath)) {
-                            if (framework === 'cucumber') {
-                                if (checkExistingDriverName(exports.projectPath, 'chromedriver', language, framework)) {
-                                    loadPropertiesFromEachPathTSJS(exports.projectPath + "/resources/", true);
-                                    executeExtraCommand(exports.projectPath, framework, language);
+                        var pathOfLatest = '';
+                        if (framework === 'jasmine') {
+                            pathOfLatest = '/base/updatechrome.ts';
+                        } else {
+                            pathOfLatest = '/source/base/updatechrome.ts';
+                        }
+                        if (checkDirectorySync(exports.projectPath + pathOfLatest)) {
+                            if (checkExistingPlatform(exports.projectPath)) {
+                                if (framework === 'cucumber') {
+                                    if (checkExistingDriverName(exports.projectPath, 'chromedriver', language, framework)) {
+                                        loadPropertiesFromEachPathTSJS(exports.projectPath + "/resources/", true);
+                                        executeExtraCommand(exports.projectPath, framework, language);
+                                    } else {
+                                        console.log("Enter valid QAS supported driver.name .!");
+                                        doYouWantToExit();
+                                    }
                                 } else {
-                                    console.log("Enter valid QAS supported driver.name .!");
-                                    doYouWantToExit();
+                                    changeJasminTypeScriptProperties(exports.projectPath, true);
+                                    executeExtraCommand(exports.projectPath, framework, language);
                                 }
                             } else {
-                                changeJasminTypeScriptProperties(exports.projectPath, true);
-                                executeExtraCommand(exports.projectPath, framework, language);
+                                console.log("Project platform is not supported by QAS CLI");
+                                doYouWantToExit();
                             }
                         } else {
-                            console.log("Project platform is not supported by QAS CLI");
+                            console.log("Please update your project using QAS import project menu to run in QAS CLI.");
                             doYouWantToExit();
                         }
                     } else {
@@ -259,12 +287,12 @@ function checkoutFromLocalRepository() {
         .prompt([{
             type: "input",
             prefix: '>',
-            name: "Enter Project Path"
+            name: "Enter project path"
         }])
         .then(answers => {
-            path = answers["Enter Project Path"];
+            path = answers["Enter project path"];
             if (path !== undefined && path !== '' && path !== null) {
-                path = path.trim().replace(/\\/g, "");
+               path = path.trim().replace(/\\/g, "");
                 var projectDetailsFile = path + '/.qas-data/.project';
 
                 if (checkDirectorySync(projectDetailsFile)) {
@@ -291,8 +319,14 @@ function checkoutFromLocalRepository() {
                                 loadPropertiesFromEachPath(path + "/resources/", true);
                             }
                             if (framework === 'junit') {
-                                console.log("Please refer readme.md file in QAS for headless execution .");
-                                doJavaScriptExecution(path, framework, language);
+                                checkJunitReadmeFile(path, function a(response) {
+                                    if (response) {
+                                        doJavaScriptExecution(path, framework, language);
+                                    }else{
+                                        console.log("Please update your project using QAS import project menu to run in QAS CLI.");
+                                        doYouWantToExit();
+                                    }
+                                });
                             } else {
                                 if (checkExistingDriverName(path, 'chromedriver', language, framework)) {
                                     if (checkExistingPlatform(path)) {
@@ -352,22 +386,33 @@ function checkoutFromLocalRepository() {
                             isValid = false;
                         }
                         if (isValid) {
-                            if (checkExistingPlatform(path)) {
-                                if (framework === 'cucumber') {
-                                    if (checkExistingDriverName(path, 'chromedriver', language, framework)) {
-                                        loadPropertiesFromEachPathTSJS(path + "/resources/", true);
-                                        executeExtraCommand(path, framework, language);
-                                    } else {
-                                        console.log("Enter valid QAS supported driver.name .!");
-                                        doYouWantToExit();
+                            var pathOfLatest = '';
+                            if (framework === 'jasmine') {
+                                pathOfLatest = '/base/updatechrome.js';
+                            } else {
+                                pathOfLatest = '/source/base/updatechrome.js';
+                            }
+                            if (checkDirectorySync(path + pathOfLatest)) {
+                                if (checkExistingPlatform(path)) {
+                                    if (framework === 'cucumber') {
+                                        if (checkExistingDriverName(path, 'chromedriver', language, framework)) {
+                                            loadPropertiesFromEachPathTSJS(path + "/resources/", true);
+                                            executeExtraCommand(path, framework, language);
+                                        } else {
+                                            console.log("Enter valid QAS supported driver.name .!");
+                                            doYouWantToExit();
+                                        }
                                     }
-                                }
-                                else {
-                                    changeJasminProperties(path, true);
-                                    executeExtraCommand(path, framework, language);
+                                    else {
+                                        changeJasminProperties(path, true);
+                                        executeExtraCommand(path, framework, language);
+                                    }
+                                } else {
+                                    console.log("Project platform is not supported by QAS CLI");
+                                    doYouWantToExit();
                                 }
                             } else {
-                                console.log("Project platform is not supported by QAS CLI");
+                                console.log("Please update your project using QAS import project menu to run in QAS CLI.");
                                 doYouWantToExit();
                             }
                         } else {
@@ -380,29 +425,40 @@ function checkoutFromLocalRepository() {
                             isValid = false;
                         }
                         if (isValid) {
-                            if (checkExistingPlatform(path)) {
-                                if (framework === 'cucumber') {
-                                    if (checkExistingDriverName(path, 'chromedriver', language, framework)) {
-                                        loadPropertiesFromEachPathTSJS(path + "/resources/", true);
-                                        executeExtraCommand(path, framework, language);
-                                    } else {
-                                        console.log("Enter valid QAS supported driver.name .!");
-                                        doYouWantToExit();
+                            var pathOfLatest = '';
+                            if (framework === 'jasmine') {
+                                pathOfLatest = '/base/updatechrome.ts';
+                            } else {
+                                pathOfLatest = '/source/base/updatechrome.ts';
+                            }
+                            if (checkDirectorySync(path + pathOfLatest)) {
+                                if (checkExistingPlatform(path)) {
+                                    if (framework === 'cucumber') {
+                                        if (checkExistingDriverName(path, 'chromedriver', language, framework)) {
+                                            loadPropertiesFromEachPathTSJS(path + "/resources/", true);
+                                            executeExtraCommand(path, framework, language);
+                                        } else {
+                                            console.log("Enter valid QAS supported driver.name .!");
+                                            doYouWantToExit();
+                                        }
                                     }
-                                }
-                                else {
-                                    changeJasminTypeScriptProperties(path, true);
-                                    executeExtraCommand(path, framework, language);
+                                    else {
+                                        changeJasminTypeScriptProperties(path, true);
+                                        executeExtraCommand(path, framework, language);
+                                    }
+                                } else {
+                                    console.log("Project platform is not supported by QAS CLI");
+                                    doYouWantToExit();
                                 }
                             } else {
-                                console.log("Project platform is not supported by QAS CLI");
+                                console.log("Please update your project using QAS import project menu to run in QAS CLI.");
                                 doYouWantToExit();
                             }
                         } else {
                             doYouWantToExit();
                         }
                     } else {
-                        console.log("It is not valid  QAS Project");
+                        console.log("It is not valid QAS Project");
                         checkoutFromLocalRepository();
                     }
                 } else {
@@ -423,10 +479,10 @@ function doJavaScriptExecution(path, framework, language) {
         .prompt([{
             type: "input",
             prefix: '>',
-            name: "Enter ChromeDriver path"
+            name: "Enter chromeDriver path"
         }])
         .then(answers => {
-            chromePath = answers["Enter ChromeDriver path"];
+            chromePath = answers["Enter chromeDriver path"];
             if (chromePath.trim() !== null && chromePath.trim() !== undefined && chromePath.trim() !== '') {
                 // executionCommandJava(path,chromePath, framework, language);
                 var spawn_9 = require('child_process').spawn(chromePath.trim(), ['-version']);
@@ -500,29 +556,29 @@ function executionCommandJavaScritpTypescript(path, framework, language) {
         .prompt([{
             type: "input",
             prefix: '>',
-            name: "Enter Command for Execution"
+            name: "Enter command for execution"
         }])
         .then(answers => {
-            cmdJavaScript = answers['Enter Command for Execution'];
+            cmdJavaScript = answers['Enter command for execution'];
             if (cmdJavaScript !== null && cmdJavaScript !== undefined && cmdJavaScript !== '') {
                 shell.exec(cmdJavaScript, function (code, stdout, stderr) {
                     if (stderr) {
                         revertJSTSModificationOfheadless(framework, language, path);
                         if (stdout.toString().indexOf('Cucumber HTML report ') >= 1) {
                             printReportPath(framework, path, (returnvalue) => {
-                                doYouWantToExit();
+                                doYouWantToExitWithOptions(path,'' , framework, language);
                             });
                         } else if (stdout.toString().indexOf('Finished in ') >= 1) {
                             printReportPath(framework, path, (returnvalue) => {
-                                doYouWantToExit();
+                                doYouWantToExitWithOptions(path,'' , framework, language);
                             });
                         } else {
-                            doYouWantToExit();
+                            doYouWantToExitWithOptions(path,'' , framework, language);
                         }
                     } else {
                         revertJSTSModificationOfheadless(framework, language, path);
                         printReportPath(framework, path, (returnvalue) => {
-                            doYouWantToExit();
+                            doYouWantToExitWithOptions(path,'' , framework, language);
                         });
                     }
                 });
@@ -549,10 +605,10 @@ function executionCommandJava(path, chromePath, framework, language) {
         .prompt([{
             type: "input",
             prefix: '>',
-            name: "Enter Command for Execution"
+            name: "Enter command for execution"
         }])
         .then(answers => {
-            cmdJavaScript = answers['Enter Command for Execution'];
+            cmdJavaScript = answers['Enter command for execution'];
             if (cmdJavaScript !== null && cmdJavaScript !== undefined && cmdJavaScript !== '') {
                 if (language === 'java') {
                     if (framework === 'junit') {
@@ -561,17 +617,17 @@ function executionCommandJava(path, chromePath, framework, language) {
                             shell.exec('mvn  -Dtest=tests.web.*.*Test,tests.mobileweb.*.*Test -DfailIfNoTests=false -Dwebdriver.chrome.driver=' + chromePath + " test", function (code, stdout, stderr) {
                                 if (stderr) {
                                     revertModificationOfheadless(framework, language);
-                                    if (code !== 1 || stderr.toString().indexOf('command not found') <= -1) {
+                                    if (stderr.toString().indexOf('command not found') <= -1 && stdout.toString().indexOf('Tests run:') > -1) {
                                         printReportPath(framework, path, (returnvalue) => {
-                                            doYouWantToExit();
+                                            doYouWantToExitWithOptions(path, chromePath, framework, language);
                                         });
                                     } else {
-                                        doYouWantToExit();
+                                        doYouWantToExitWithOptions(path, chromePath, framework, language);
                                     }
                                 } else {
                                     revertModificationOfheadless(framework, language);
                                     printReportPath(framework, path, (returnvalue) => {
-                                        doYouWantToExit();
+                                        doYouWantToExitWithOptions(path, chromePath, framework, language);
                                     });
                                 }
                             });
@@ -580,39 +636,39 @@ function executionCommandJava(path, chromePath, framework, language) {
                             shell.exec('mvn  -Dtest=tests.web.*.*Test,tests.mobileweb.*.*Test -DfailIfNoTests=false -Dwebdriver.chrome.driver=' + chromePath + " site", function (code, stdout, stderr) {
                                 if (stderr) {
                                     revertModificationOfheadless(framework, language);
-                                    if (code !== 1 || stderr.toString().indexOf('command not found') <= -1) {
+                                    if (stderr.toString().indexOf('command not found') <= -1 && stdout.toString().indexOf('Tests run:') > -1) {
                                         printReportPath(framework, path, (returnvalue) => {
-                                            doYouWantToExit();
+                                            doYouWantToExitWithOptions(path, chromePath, framework, language);
                                         });
                                     } else {
-                                        doYouWantToExit();
+                                        doYouWantToExitWithOptions(path, chromePath, framework, language);
                                     }
                                 } else {
                                     revertModificationOfheadless(framework, language);
                                     printReportPath(framework, path, (returnvalue) => {
-                                        doYouWantToExit();
+                                        doYouWantToExitWithOptions(path, chromePath, framework, language);
                                     });
                                 }
                             });
                         } else {
                             console.log(cmdJavaScript + ' command not found.');
-                            doYouWantToExit();
+                            doYouWantToExitWithOptions(path, chromePath, framework, language);
                         }
                     } else {
                         shell.exec(cmdJavaScript + ' -Dwebdriver.chrome.driver=' + chromePath, function (code, stdout, stderr) {
                             if (stderr) {
                                 revertModificationOfheadless(framework, language);
-                                if (code !== 1 || stderr.toString().indexOf('command not found') <= -1) {
+                                if (stderr.toString().indexOf('command not found') <= -1 && stdout.toString().indexOf('Tests run:') > -1) {
                                     printReportPath(framework, path, (returnvalue) => {
-                                        doYouWantToExit();
+                                        doYouWantToExitWithOptions(path, chromePath, framework, language);
                                     });
                                 } else {
-                                    doYouWantToExit();
+                                    doYouWantToExitWithOptions(path, chromePath, framework, language);
                                 }
                             } else {
                                 revertModificationOfheadless(framework, language);
                                 printReportPath(framework, path, (returnvalue) => {
-                                    doYouWantToExit();
+                                    doYouWantToExitWithOptions(path, chromePath, framework, language);
                                 });
                             }
                         });
@@ -631,7 +687,7 @@ function executionCommandJava(path, chromePath, framework, language) {
                             isValidPythonCmd = true;
                         } else {
                             console.log(cmdJavaScript + ' command not found.');
-                            doYouWantToExit();
+                            doYouWantToExitWithOptions(path, chromePath, framework, language);
                         }
                         if (isValidPythonCmd) {
                             var isweb = false;
@@ -651,22 +707,22 @@ function executionCommandJava(path, chromePath, framework, language) {
                             }
                             if (!isMob && !isweb) {
                                 console.log('No tests available to run .');
-                                doYouWantToExit();
+                                doYouWantToExitWithOptions(path, chromePath, framework, language);
                             } else {
                                 shell.exec("robot " + upload + " \"" + robotMobUrl + '\"  \"' + robotWeburl + '\"', function (code, stdout, stderr) {
                                     if (stderr) {
                                         revertModificationOfheadless(framework, language);
                                         if ((stdout.toString().indexOf('report.html') >= 1) && (stdout.toString().indexOf('Report:  ' >= 1))) {
                                             printReportPath(framework, path, (returnvalue) => {
-                                                doYouWantToExit();
+                                                doYouWantToExitWithOptions(path, chromePath, framework, language);
                                             });
                                         } else {
-                                            doYouWantToExit();
+                                            doYouWantToExitWithOptions(path, chromePath, framework, language);
                                         }
                                     } else {
                                         revertModificationOfheadless(framework, language);
                                         printReportPath(framework, path, (returnvalue) => {
-                                            doYouWantToExit();
+                                            doYouWantToExitWithOptions(path, chromePath, framework, language);
                                         });
                                     }
                                 });
@@ -678,26 +734,26 @@ function executionCommandJava(path, chromePath, framework, language) {
                                     revertModificationOfheadless(framework, language);
                                     if (stdout.toString().indexOf('Took ') >= 1) {
                                         printReportPath(framework, path, (returnvalue) => {
-                                            doYouWantToExit();
+                                            doYouWantToExitWithOptions(path, chromePath, framework, language);
                                         });
                                     } else {
-                                        doYouWantToExit();
+                                        doYouWantToExitWithOptions(path, chromePath, framework, language);
                                     }
                                 } else {
                                     revertModificationOfheadless(framework, language);
                                     if (stdout.toString().indexOf('Took 0m0.000s') <= -1) {
                                         printReportPath(framework, path, (returnvalue) => {
-                                            doYouWantToExit();
+                                            doYouWantToExitWithOptions(path, chromePath, framework, language);
                                         });
                                     } else {
-                                        doYouWantToExit();
+                                        doYouWantToExitWithOptions(path, chromePath, framework, language);
                                     }
                                 }
                             });
                         }
                 }
             } else {
-                executionCommandJava(path);
+                executionCommandJava(path,chromePath,framework,language);
             }
         });
 }
@@ -1007,7 +1063,7 @@ function saveEnvFile(content, fileToWrite, callback) {
 }
 exports.saveEnvFile = saveEnvFile;
 
-function getInstalledToolsInformation() {
+function getInstalledToolsInformation(callback) {
     // callback({ "java": "1.8.0", "npm": "6.4.0", ".net": null });
 
     getJavaVersion(function (err, version) {
@@ -1034,6 +1090,7 @@ function getInstalledToolsInformation() {
                                 getNpmVersion(function (err, version) {
                                     // console.log("npm: " + version);
                                     response['npm'] = version;
+                                    callback(response);
                                 });
                             });
                         });
@@ -1623,3 +1680,74 @@ function printReportPath(framework, projectPath, callback) {
             callback(true);
         }
     }
+
+
+    function doYouWantToExitWithOptions(path ,chromePath, framework, language) {
+        process.title = 'QAS CLI';
+        console.log("");
+        console.log("");
+        var againExecution = "";
+        inquirer
+            .prompt([{
+                type: "list",
+                name: 'reptiles',
+                prefix: '>',
+                message: "Process completed. Please select ",
+                choices: ['Execute other project', 'Re-execute project', 'Quit']
+    
+    
+            }])
+            .then(answers => {
+                againExecution = answers.reptiles;
+                if (againExecution !== undefined && againExecution !== '' && againExecution !== null) {
+                    if (againExecution === 'Execute other project') {
+                        testings();
+                    } else if (againExecution === 'Re-execute project') {
+                        if (language === 'java' || language === 'python') {
+                            if(language==='java'){
+                                if(framework !== 'junit'){
+                                    loadPropertiesFromEachPath(path + "/resources/", true);
+                                }
+                            }
+                            if(language==='python'){
+                                if(framework === 'robot'){
+                                    changePythonRobotProperties(path, true);
+                                }else{
+                                    changePythonBehaveProperties(path, true);
+                                }
+                            }
+                            executionCommandJava(path, chromePath, framework, language);
+                        }else{
+                            if (framework === 'cucumber') {
+                                loadPropertiesFromEachPathTSJS(path + "/resources/", true);
+                            }
+                            if (framework === 'jasmine') {
+                                if (language === 'javascript') {
+                                    changeJasminProperties(path, true);
+                                } else {
+                                    changeJasminTypeScriptProperties(path, true);
+                                }
+                            }
+                            executionCommandJavaScritpTypescript(path, framework, language);
+                        }
+                    } else {
+                        shell.exit(1);
+                    }
+                }
+            });
+    }
+    
+    
+    async function checkJunitReadmeFile(path,callback){
+        await fs.readFile(path+"\\README.md","utf8", (err, data) => {
+            if (err) {
+                 callback(false);
+            }
+            if(data.indexOf('qasHeadlessMode') >= 0){
+                 callback(true);
+            }else{
+                callback(false);
+            }
+          });
+    }
+    

@@ -21,8 +21,8 @@ function testings() {
 			type: "list",
 			name: 'reptiles',
 			prefix: '>',
-			message: "Choose Project to run on QAS CLI.",
-			choices: ['local System', 'Version control', 'Quit'],
+			message: "Choose project to run on QAS CLI.",
+			choices: ['Local system', 'Version control', 'Quit'],
 		}])
 		.then(answers => {
 			inputProjectMode = answers.reptiles;
@@ -33,7 +33,7 @@ function testings() {
 				// /shell.exec("cmd /k QAS CLI");
 				process.env['qasHeadlessMode'] = 'true';
 				process.title = 'QAS CLI';
-				if (inputProjectMode === 'local System') {
+				if (inputProjectMode === 'Local system') {
 					checkoutFromLocalRepository();
 				} else if (inputProjectMode === 'Version control') {
 					gitCheckout();
@@ -225,9 +225,9 @@ function gitCheckoutWithInquer(cmdPerform, path) {
 				if (isValid) {
 					var pathOfLatest = '';
 					if (framework === 'jasmine') {
-						pathOfLatest = 'base/updatechrome.js';
+						pathOfLatest = '/base/updatechrome.js';
 					} else {
-						pathOfLatest = 'source/base/updatechrome.js';
+						pathOfLatest = '/source/base/updatechrome.js';
 					}
 					if (checkDirectorySync(exports.projectPath + pathOfLatest)) {
 						if (checkExistingPlatform(exports.projectPath)) {
@@ -263,9 +263,9 @@ function gitCheckoutWithInquer(cmdPerform, path) {
 					if (isValid) {
 						var pathOfLatest = '';
 						if (framework === 'jasmine') {
-							pathOfLatest = 'base/updatechrome.ts';
+							pathOfLatest = '/base/updatechrome.ts';
 						} else {
-							pathOfLatest = 'source/base/updatechrome.ts';
+							pathOfLatest = '/source/base/updatechrome.ts';
 						}
 						if (checkDirectorySync(exports.projectPath + pathOfLatest)) {
 							if (checkExistingPlatform(exports.projectPath)) {
@@ -310,10 +310,10 @@ function checkoutFromLocalRepository() {
 		.prompt([{
 			type: "input",
 			prefix: '>',
-			name: "Enter Project Path"
+			name: "Enter project path"
 		}])
 		.then(answers => {
-			path = answers["Enter Project Path"];
+			path = answers["Enter project path"];
 			if (path !== undefined && path !== '' && path !== null) {
 				// path = path.replace(/\\/g, "");
 				var projectDetailsFile = path + '\\.qas-data\\.project';
@@ -406,9 +406,9 @@ function checkoutFromLocalRepository() {
 						if (isValid) {
 							var pathOfLatest = '';
 							if (framework === 'jasmine') {
-								pathOfLatest = 'base/updatechrome.js';
+								pathOfLatest = '/base/updatechrome.js';
 							} else {
-								pathOfLatest = 'source/base/updatechrome.js';
+								pathOfLatest = '/source/base/updatechrome.js';
 							}
 							if (checkDirectorySync(path + pathOfLatest)) {
 								if (checkExistingPlatform(path)) {
@@ -444,9 +444,9 @@ function checkoutFromLocalRepository() {
 						if (isValid) {
 							var pathOfLatest = '';
 							if (framework === 'jasmine') {
-								pathOfLatest = 'base/updatechrome.ts';
+								pathOfLatest = '/base/updatechrome.ts';
 							} else {
-								pathOfLatest = 'source/base/updatechrome.ts';
+								pathOfLatest = '/source/base/updatechrome.ts';
 							}
 							if (checkDirectorySync(path + pathOfLatest)) {
 								if (checkExistingPlatform(path)) {
@@ -496,10 +496,10 @@ function doJavaScriptExecution(path, framework, language) {
 		.prompt([{
 			type: "input",
 			prefix: '>',
-			name: "Enter ChromeDriver exe path"
+			name: "Enter chromedriver exe path"
 		}])
 		.then(answers => {
-			chromePath = answers["Enter ChromeDriver exe path"];
+			chromePath = answers["Enter chromedriver exe path"];
 			if (chromePath !== null && chromePath !== undefined && chromePath !== '') {
 				// executionCommandJava(path,chromePath, framework, language);
 				var spawn_9 = require('child_process').spawn(chromePath.trim(), ['-version']);
@@ -727,7 +727,7 @@ function executionCommandJava(path ,chromePath, framework, language) {
 							isValidPythonCmd=true;
 					}else{
 							console.log(cmdJavaScript + 'is not recognized as an internal or external command, \n operable program or batch file.');
-							doYouWantToExit();
+							doYouWantToExitWithOptions(path, chromePath, framework, language);
 					}
 					if(isValidPythonCmd){
 						var isweb=false;
@@ -747,6 +747,7 @@ function executionCommandJava(path ,chromePath, framework, language) {
 						}
 						if(!isMob && !isweb){
 							console.log('No tests available to run .');
+							doYouWantToExitWithOptions(path, chromePath, framework, language);
 						}else{
 							shell.exec("robot "+upload +" \""+robotMobUrl+'\"  \"'+robotWeburl+'\"' , function (code, stdout, stderr) {
 								if (stderr) {
@@ -1783,8 +1784,8 @@ function doYouWantToExitWithOptions(path ,chromePath, framework, language) {
 			type: "list",
 			name: 'reptiles',
 			prefix: '>',
-			message: "Process Completed. Please select ",
-			choices: ['Execute other project', 'Re-execution of project', 'Quit']
+			message: "Process completed. Please select ",
+			choices: ['Execute other project', 'Re-execute project', 'Quit']
 
 
 		}])
@@ -1793,7 +1794,7 @@ function doYouWantToExitWithOptions(path ,chromePath, framework, language) {
 			if (againExecution !== undefined && againExecution !== '' && againExecution !== null) {
 				if (againExecution === 'Execute other project') {
 					testings();
-				} else if (againExecution === 'Re-Execution of project') {
+				} else if (againExecution === 'Re-execute project') {
 					if (language === 'java' || language === 'python') {
 						if(language==='java'){
 							if(framework !== 'junit'){
