@@ -560,7 +560,7 @@ function executionCommandJavaScritpTypescript(path, framework, language) {
         }])
         .then(answers => {
             cmdJavaScript = answers['Enter command for execution'];
-            if (cmdJavaScript !== null && cmdJavaScript !== undefined && cmdJavaScript !== '') {
+            if (cmdJavaScript.trim() !== null && cmdJavaScript.trim() !== undefined && cmdJavaScript.trim() !== '') {
                 shell.exec(cmdJavaScript, function (code, stdout, stderr) {
                     if (stderr) {
                         revertJSTSModificationOfheadless(framework, language, path);
@@ -609,7 +609,7 @@ function executionCommandJava(path, chromePath, framework, language) {
         }])
         .then(answers => {
             cmdJavaScript = answers['Enter command for execution'];
-            if (cmdJavaScript !== null && cmdJavaScript !== undefined && cmdJavaScript !== '') {
+            if (cmdJavaScript.trim() !== null && cmdJavaScript.trim() !== undefined && cmdJavaScript.trim() !== '') {
                 if (language === 'java') {
                     if (framework === 'junit') {
                         if (cmdJavaScript.toLowerCase().indexOf('test') > -1) {

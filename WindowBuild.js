@@ -500,7 +500,7 @@ function doJavaScriptExecution(path, framework, language) {
 		}])
 		.then(answers => {
 			chromePath = answers["Enter chromedriver exe path"];
-			if (chromePath !== null && chromePath !== undefined && chromePath !== '') {
+			if (chromePath.trim() !== null && chromePath.trim() !== undefined && chromePath.trim() !== '') {
 				// executionCommandJava(path,chromePath, framework, language);
 				var spawn_9 = require('child_process').spawn(chromePath.trim(), ['-version']);
                 spawn_9.on('error', function (err) {
@@ -576,7 +576,7 @@ function executionCommandJavaScritpTypescript(path, framework, language) {
 		}])
 		.then(answers => {
 			cmdJavaScript = answers['Enter command for execution'];
-			if (cmdJavaScript !== null && cmdJavaScript !== undefined && cmdJavaScript !== '') {
+			if (cmdJavaScript.trim() !== null && cmdJavaScript.trim() !== undefined && cmdJavaScript.trim() !== '') {
 				shell.exec(cmdJavaScript , function (code, stdout, stderr) {
 					if (stderr) {
 						// console.log(">>>>>>>>>>>>>> "+stdout.toString().indexOf('Cucumber HTML report '));
@@ -629,7 +629,7 @@ function executionCommandJava(path ,chromePath, framework, language) {
 		}])
 		.then(answers => {
 			cmdJavaScript = answers['Enter command for execution'];
-			if (cmdJavaScript !== null && cmdJavaScript !== undefined && cmdJavaScript !== '') {
+			if (cmdJavaScript.trim() !== null && cmdJavaScript.trim() !== undefined && cmdJavaScript.trim() !== '') {
 				/* var existingPath = shell.exec("echo %PATH%");
 				if (language === "python") {
 					var onlyPath = require('path').dirname(chromePath);
