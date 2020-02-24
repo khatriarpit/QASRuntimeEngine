@@ -577,31 +577,36 @@ function executionCommandJavaScritpTypescript(path, framework, language) {
 		.then(answers => {
 			cmdJavaScript = answers['Enter command for execution'];
 			if (cmdJavaScript.trim() !== null && cmdJavaScript.trim() !== undefined && cmdJavaScript.trim() !== '') {
-				shell.exec(cmdJavaScript , function (code, stdout, stderr) {
-					if (stderr) {
-						// console.log(">>>>>>>>>>>>>> "+stdout.toString().indexOf('Cucumber HTML report '));
-						// console.log("Not Recognize  "+stderr.toString().indexOf('is not recognized'));
-						// console.log("npm ERR!  "+stderr.toString().indexOf('npm ERR!'));
-						// console.log("npm ERR! Test failed.  "+stderr.toString().indexOf('npm ERR! Test failed.'));
-						revertJSTSModificationOfheadless(framework ,language,path);
-						if(stdout.toString().indexOf('Cucumber HTML report ') >= 1){
-							printReportPath(framework,path,(returnvalue)=> {
-								doYouWantToExitWithOptions(path,'' , framework, language);
+				if (cmdJavaScript.indexOf('npm') <= -1) {
+					console.log(cmdJavaScript + ' is not recognized as an internal or external command, \n operable program or batch file.');
+					doYouWantToExitWithOptions(path, '', framework, language);
+				} else {
+					shell.exec(cmdJavaScript, function (code, stdout, stderr) {
+						if (stderr) {
+							// console.log(">>>>>>>>>>>>>> "+stdout.toString().indexOf('Cucumber HTML report '));
+							// console.log("Not Recognize  "+stderr.toString().indexOf('is not recognized'));
+							// console.log("npm ERR!  "+stderr.toString().indexOf('npm ERR!'));
+							// console.log("npm ERR! Test failed.  "+stderr.toString().indexOf('npm ERR! Test failed.'));
+							revertJSTSModificationOfheadless(framework, language, path);
+							if (stdout.toString().indexOf('Cucumber HTML report ') >= 1) {
+								printReportPath(framework, path, (returnvalue) => {
+									doYouWantToExitWithOptions(path, '', framework, language);
+								});
+							} else if (stdout.toString().indexOf('Finished in ') >= 1) {
+								printReportPath(framework, path, (returnvalue) => {
+									doYouWantToExitWithOptions(path, '', framework, language);
+								});
+							} else {
+								doYouWantToExitWithOptions(path, '', framework, language);
+							}
+						} else {
+							revertJSTSModificationOfheadless(framework, language, path);
+							printReportPath(framework, path, (returnvalue) => {
+								doYouWantToExitWithOptions(path, '', framework, language);
 							});
-						}else if (stdout.toString().indexOf('Finished in ') >= 1){
-							printReportPath(framework,path,(returnvalue)=> {
-								doYouWantToExitWithOptions(path,''  , framework, language);
-							});
-						}else{
-							doYouWantToExitWithOptions(path ,'' , framework, language);
 						}
-					}else{
-						revertJSTSModificationOfheadless(framework,language,path);
-						printReportPath(framework,path,(returnvalue)=> {
-							doYouWantToExitWithOptions(path ,'' , framework, language);
-						});
-					}
-				});
+					});
+				}
 			} else {
 				executionCommandJavaScritpTypescript(path,framework,language);
 			}
@@ -639,6 +644,9 @@ function executionCommandJava(path ,chromePath, framework, language) {
 				} */
 				if (language == 'java') {
 					// mvn  -Dtest=tests.web.*.*Test,tests.mobileweb.*.*Test  site
+					var listOFCommands = ["mvn clean test" ,"mvn test","mvn site"];
+					var result = listOFCommands.findIndex(item => cmdJavaScript.toLowerCase() === item.toLowerCase());
+					if(result > -1){
 					if(framework==='junit'){
 						if(cmdJavaScript.toLowerCase().indexOf('test') > -1){
 							// console.log('mvn  -Dtest=tests.web.*.*Test,tests.mobileweb.*.*Test -Dwebdriver.chrome.driver=' + chromePath + " site");
@@ -693,7 +701,7 @@ function executionCommandJava(path ,chromePath, framework, language) {
 								}
 							});
 							}else{
-								console.log(cmdJavaScript + 'is not recognized as an internal or external command, \n operable program or batch file.');
+								console.log(cmdJavaScript + ' is not recognized as an internal or external command, \n operable program or batch file.');
 								doYouWantToExitWithOptions(path, chromePath, framework, language);
 							}
 					}else{
@@ -717,7 +725,10 @@ function executionCommandJava(path ,chromePath, framework, language) {
 							}
 						});
 					}
-						
+				}else{
+					console.log(cmdJavaScript + ' is not recognized as an internal or external command, \n operable program or batch file.');
+					doYouWantToExitWithOptions(path, chromePath, framework, language);
+				}	
 				} else {
 					// var existingPath = shell.exec("echo %PATH%");
 						shell.env["chromedriver"] =chromePath;
@@ -732,7 +743,7 @@ function executionCommandJava(path ,chromePath, framework, language) {
 							upload='';
 							isValidPythonCmd=true;
 					}else{
-							console.log(cmdJavaScript + 'is not recognized as an internal or external command, \n operable program or batch file.');
+							console.log(cmdJavaScript + ' is not recognized as an internal or external command, \n operable program or batch file.');
 							doYouWantToExitWithOptions(path, chromePath, framework, language);
 					}
 					if(isValidPythonCmd){
@@ -755,7 +766,17 @@ function executionCommandJava(path ,chromePath, framework, language) {
 							console.log('No tests available to run .');
 							doYouWantToExitWithOptions(path, chromePath, framework, language);
 						}else{
-							shell.exec("robot "+upload +" \""+robotMobUrl+'\"  \"'+robotWeburl+'\"' , function (code, stdout, stderr) {
+							var uris='';
+							if(robotMobUrl !== '' && robotWeburl !==''){
+								uris="robot " + upload + " \"" + robotMobUrl + '\"  \"' + robotWeburl + '\"';
+							}
+							if(robotMobUrl !== '' && robotWeburl == ''){
+								uris="robot " + upload + " \"" + robotMobUrl + '\"';
+							}
+							if(robotMobUrl === '' && robotWeburl !== ''){
+								uris="robot " + upload + " \"" + robotWeburl + '\"';
+							}
+							shell.exec(uris , function (code, stdout, stderr) {
 								if (stderr) {
 									revertModificationOfheadless(framework,language);
 									// console.log(">>>HTML>>>>>"+stdout.toString().indexOf('report.html'));
@@ -776,6 +797,10 @@ function executionCommandJava(path ,chromePath, framework, language) {
 							});
 						}
 					}
+					}else{
+					if(cmdJavaScript.indexOf('behave')<=-1){
+						console.log(cmdJavaScript + ' is not recognized as an internal or external command, \n operable program or batch file.');
+						doYouWantToExitWithOptions(path, chromePath, framework, language);
 					}else{
 					shell.exec(cmdJavaScript , function (code, stdout, stderr) {
 						if (stderr) {
@@ -805,6 +830,7 @@ function executionCommandJava(path ,chromePath, framework, language) {
 							}
 						}
 					});
+				}
 					}
 				}
 				
