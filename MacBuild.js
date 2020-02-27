@@ -92,7 +92,7 @@ function gitCheckout(drivername) {
                     } else {
                         console.log('QAS CLI can\'t find the path specified.');
                         console.log('');
-                        gitCheckout();
+                        gitCheckout(drivername);
                     }
                 }//check
                 else {
@@ -115,7 +115,7 @@ function processGitClone(path,drivername) {
             if (cmdPerform !== undefined && cmdPerform !== '' && cmdPerform !== null) {
                 gitCheckoutWithInquer(cmdPerform, path,drivername);
             } else {
-                processGitClone(path);
+                processGitClone(path,drivername);
             }
         });
 }
@@ -129,7 +129,7 @@ function gitCheckoutWithInquer(cmdPerform, path,drivername) {
     const a = exec(cmdPerform, function (err, stdout, stderr) {
         if (err) {
             console.log(err);
-            processGitClone(path);
+            processGitClone(path,drivername);
         } else {
             console.log("Clone repository successfully ..");
             // process.chdir(exports.projectPath);
@@ -161,7 +161,7 @@ function gitCheckoutWithInquer(cmdPerform, path,drivername) {
                                 if (response) {
                                     doJavaScriptExecution(exports.projectPath, framework, language,drivername);
                                 } else {
-                                    console.log("Please update your project using QAS import project menu to run in QAS CLI.");
+                                    console.log("QAS CLI requires to update your project using QAS import project menu.");
                                     doYouWantToExit();
                                 }
                             });
@@ -251,7 +251,7 @@ function gitCheckoutWithInquer(cmdPerform, path,drivername) {
                             doYouWantToExit();
                         }
                     } else {
-                        console.log("Please update your project using QAS import project menu to run in QAS CLI.");
+                        console.log("QAS CLI requires to update your project using QAS import project menu.");
                         doYouWantToExit();
                     }
                 }else if (language !== undefined && language !== '' && language === 'typescript') {
@@ -286,7 +286,7 @@ function gitCheckoutWithInquer(cmdPerform, path,drivername) {
                                 doYouWantToExit();
                             }
                         } else {
-                            console.log("Please update your project using QAS import project menu to run in QAS CLI.");
+                            console.log("QAS CLI requires to update your project using QAS import project menu.");
                             doYouWantToExit();
                         }
                     } else {
@@ -345,7 +345,7 @@ function checkoutFromLocalRepository(drivername) {
                                     if (response) {
                                         doJavaScriptExecution(path, framework, language,drivername);
                                     }else{
-                                        console.log("Please update your project using QAS import project menu to run in QAS CLI.");
+                                        console.log("QAS CLI requires to update your project using QAS import project menu.");
                                         doYouWantToExit();
                                     }
                                 });
@@ -434,7 +434,7 @@ function checkoutFromLocalRepository(drivername) {
                                     doYouWantToExit();
                                 }
                             } else {
-                                console.log("Please update your project using QAS import project menu to run in QAS CLI.");
+                                console.log("QAS CLI requires to update your project using QAS import project menu.");
                                 doYouWantToExit();
                             }
                         } else {
@@ -473,7 +473,7 @@ function checkoutFromLocalRepository(drivername) {
                                     doYouWantToExit();
                                 }
                             } else {
-                                console.log("Please update your project using QAS import project menu to run in QAS CLI.");
+                                console.log("QAS CLI requires to update your project using QAS import project menu.");
                                 doYouWantToExit();
                             }
                         } else {
@@ -527,7 +527,7 @@ function doJavaScriptExecution(path, framework, language,drivername) {
 						console.log('Enter valid ' + drivername + ' path.');
 						doJavaScriptExecution(path, framework, language, drivername);
                     } else {
-                        executionCommandJava(path, chromePath, framework, language, drivername);
+                        executionCommandJava(path, driverPath, framework, language, drivername);
                     }
                 });
             } else {
@@ -835,7 +835,7 @@ function executionCommandJava(path, chromePath, framework, language,drivername) 
             }
         });
 }
-function revertModificationOfheadless(framework,language){
+function revertModificationOfheadless(framework,language,drivername){
     if (framework == "robot") {
         changePythonRobotProperties(exports.projectPath, false,drivername);
     }
@@ -1898,7 +1898,7 @@ function printReportPath(framework, projectPath, callback) {
             if (err) {
                  callback(false);
             }
-            if(data.indexOf('qasHeadlessMode') >= 0){
+            if(data.indexOf('firefoxDriver') >= 0){
                  callback(true);
             }else{
                 callback(false);
@@ -1916,15 +1916,16 @@ function printReportPath(framework, projectPath, callback) {
                     objectValueMap['driver.name']='chromeDriver';
                 }
             }
+            var str = '';
+            for (var i in objectValueMap) {
+                var key = typeof objectValueMap[i] === 'object' ? JSON.stringify(objectValueMap[i]) : objectValueMap[i];
+                str += i + '=' + key + '\n';
+            }
+            saveEnvFile(str, path + '/application.properties' , function (fileRes) {
+                console.log(fileRes);
+            });
         }
-        var str = '';
-        for (var i in objectValueMap) {
-            var key = typeof objectValueMap[i] === 'object' ? JSON.stringify(objectValueMap[i]) : objectValueMap[i];
-            str += i + '=' + key + '\n';
-        }
-        saveEnvFile(str, path + '/application.properties' , function (fileRes) {
-            console.log(fileRes);
-        });
+      
     }
     
     function changeDriverVariableInApplicationProperties(path,driverName,isSave){
@@ -1941,8 +1942,7 @@ function printReportPath(framework, projectPath, callback) {
                    
                 }
             }
-        }
-        var str = '';
+            var str = '';
         for (var i in objectValueMap) {
             var key = typeof objectValueMap[i] === 'object' ? JSON.stringify(objectValueMap[i]) : objectValueMap[i];
             str += i + '=' + key + '\n';
@@ -1950,4 +1950,6 @@ function printReportPath(framework, projectPath, callback) {
         saveEnvFile(str, path + '/application.properties' , function (fileRes) {
             console.log(fileRes);
         });
+        }
+        
     }
