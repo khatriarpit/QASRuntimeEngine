@@ -949,13 +949,13 @@ function changePythonBehaveProperties(path, isSave,drivername) {
 						if (drivername === 'firefoxDriver') {
 							objectValueMap['driver.name'] = drivername;
 							if (element !== 'mobileweb') {
-								objectValueMap['firefox.additional.capabilities'] = '{"moz:firefoxOptions":{"args": ["--headless", "--disable-gpu","--no-sandbox","--disable-dev-shm-usage"]}}';
+								objectValueMap['firefox.additional.capabilities'] = '{"browserName": "firefox","marionette": "True", "acceptInsecureCerts": "True","moz:firefoxOptions":{"args":["--headless"]}}';
 							} else {
-								objectValueMap['firefox.additional.capabilities'] = { 'moz:firefoxOptions': { args: ['--headless', '--no-sandbox', '--disable-dev-shm-usage', '--disable-gpu'] } };
+								objectValueMap['firefox.additional.capabilities'] = { 'moz:firefoxOptions': { "args": ['--headless', '--no-sandbox', '--disable-dev-shm-usage', '--disable-gpu'] } };
 							}
 						} else {
 								if (element !== 'mobileweb') {
-									objectValueMap['chrome.additional.capabilities'] = { 'goog:chromeOptions': { args: ['--headless', '--no-sandbox', '--disable-dev-shm-usage', '--disable-gpu'] } };
+									objectValueMap['chrome.additional.capabilities'] = { 'goog:chromeOptions': { "args": ['--headless', '--no-sandbox', '--disable-dev-shm-usage', '--disable-gpu'] } };
 								} else {
 									objectValueMap['chrome.additional.capabilities'] = { "goog:chromeOptions": { "mobileEmulation": { "deviceName": "Pixel 2" }, "args": ["--headless", "--disable-gpu", "--no-sandbox", "--disable-dev-shm-usage"] } };
 								}
