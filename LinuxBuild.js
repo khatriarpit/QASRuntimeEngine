@@ -724,9 +724,13 @@ function executionCommandJava(path,chromePath, framework, language,drivername) {
                                 }
                             } else {
                                 revertModificationOfheadless(framework, language,drivername);
-                                printReportPath(framework, path, (returnvalue) => {
-                                    doYouWantToExitWithOptions(path, chromePath, framework, language,drivername);
-                                });
+                                if (stdout.toString().indexOf("BUILD SUCCESS") >= 1) {
+                                    printReportPath(framework, path, (returnvalue) => {
+                                        doYouWantToExitWithOptions(path, chromePath, framework, language, drivername);
+                                    });
+                                } else {
+                                    doYouWantToExitWithOptions(path, chromePath, framework, language, drivername);
+                                }
                             }
                         });
                     }
@@ -1269,7 +1273,7 @@ function saveEnvFile(content, fileToWrite, callback) {
 }
 exports.saveEnvFile = saveEnvFile;
 
-function getInstalledToolsInformation() {
+function getInstalledToolsInformation(callback) {
     // callback({ "java": "1.8.0", "npm": "6.4.0", ".net": null });
 
     getJavaVersion(function (err, version) {
@@ -1317,6 +1321,7 @@ function getInstalledToolsInformation() {
                                 callback(response);
                             });
                         }); */
+                        callback(response);
                     });
                 });
                 });
@@ -2005,7 +2010,7 @@ function askForScheduing(cmd,chrmdriverPath,language,framework){
                     objectValueMap['webdriver.gecko.driver']=objectValueMap['system.webdriver.gecko.driver'];
                     delete objectValueMap['system.webdriver.gecko.driver'];
                 }else{
-                    objectValueMap['system.webdriver.gecko.driver']=objectValueMap['webdriver.gecko.driver'];
+                    objectValueMap['system.webdriver.gecko.driver']='<GECKO_DRIVER_PATH>';
                    delete objectValueMap['webdriver.gecko.driver'];
                    
                 }
