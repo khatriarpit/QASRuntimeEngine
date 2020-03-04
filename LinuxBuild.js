@@ -27,6 +27,7 @@ function testings() {
             console.log('');
             // getInstalledToolsInformation();
             getInstalledToolsInformation(function a(response) {
+            });
               //  console.log(response);
                 // /shell.exec("cmd /k QAS CLI");
                 process.env['qasHeadlessMode'] = 'true';
@@ -45,7 +46,6 @@ function testings() {
                 } else {
                     console.log('Wrong selection, Please select again');
                 }
-            });
         });
 }
 
@@ -307,7 +307,7 @@ function gitCheckoutWithInquer(cmdPerform, path,drivername) {
     });
 }
 
-function checkoutFromLocalRepository() {
+function checkoutFromLocalRepository(drivername) {
     var path = '';
     inquirer
         .prompt([{
@@ -1300,27 +1300,6 @@ function getInstalledToolsInformation(callback) {
                     getNpmVersion(function (err, version) {
                         // console.log("npm: " + version);
                         response['npm'] = version;
-                        /* isWin(function (err, version) {
-                            // console.log("win: " + version);
-                            if (version) {
-                                response['windows'] = os.release();
-                            }
-                            else {
-                                response['windows'] = null;
-                            }
-                            isMac(function (err, version) {
-                                // console.log("mac: " + version);
-                                if (version) {
-                                    response['mac'] = os.release();
-                                    response['ios'] = os.release();
-                                }
-                                else {
-                                    response['mac'] = null;
-                                    response['ios'] = null;
-                                }
-                                callback(response);
-                            });
-                        }); */
                         callback(response);
                     });
                 });
