@@ -489,11 +489,11 @@ function checkoutFromLocalRepository(drivername) {
                     }
                     else {
                         console.log("It is not valid  QAS project");
-                        checkoutFromLocalRepository();
+                        checkoutFromLocalRepository(drivername);
                     }
                 } else {
                     console.log("QAS CLI can\'t find the path specified.");
-                    checkoutFromLocalRepository();
+                    checkoutFromLocalRepository(drivername);
                 }
             }//if check
             else {
@@ -646,7 +646,7 @@ function executionCommandJava(path,chromePath, framework, language,drivername) {
             name: "Enter command for execution"
         }])
         .then(answers => {
-            cmdJavaScript = answers['Enter Command for Execution'];
+            cmdJavaScript = answers['Enter command for execution'];
             if (cmdJavaScript !== null && cmdJavaScript !== undefined && cmdJavaScript !== '') {
                 if (language === 'java') {
                     var commandLineDriver='';
