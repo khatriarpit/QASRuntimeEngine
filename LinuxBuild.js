@@ -626,7 +626,7 @@ function executionCommandJavaScritpTypescript(path, framework, language,driverna
         });
 }
 
-function revertJSTSModificationOfheadless(framework,language,path,driverName){
+function revertJSTSModificationOfheadless(framework,language,path,drivername){
     if (framework === "cucumber" && (language ==='typescript' || language ==='javascript')) {
         loadPropertiesFromEachPathTSJS(path + "/resources/", false,drivername);
     }
