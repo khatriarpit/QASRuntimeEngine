@@ -224,8 +224,8 @@ function gitCheckoutWithInquer(cmdPerform, path,drivername) {
                             if (checkExistingDriverName(exports.projectPath, drivername, language, framework)) {
                                 if (checkExistingPlatform(exports.projectPath)) {
                                     loadPropertiesFromEachPath(exports.projectPath + "/resources/", true,drivername,function(response){
-                                        doJavaScriptExecution(exports.projectPath, framework, language,drivername);
                                     });
+                                    doJavaScriptExecution(exports.projectPath, framework, language,drivername);
                                 } else {
                                     console.log("Project platform is not supported by QAS CLI");
                                     doYouWantToExit();
@@ -290,16 +290,16 @@ function gitCheckoutWithInquer(cmdPerform, path,drivername) {
                                 if (framework === 'cucumber') {
                                     if (checkExistingDriverName(exports.projectPath, drivername, language, framework)) {
                                         loadPropertiesFromEachPathTSJS(exports.projectPath + "/resources/", true,drivername,function(response){
-                                            executeExtraCommand(exports.projectPath, framework, language,drivername);
                                         });
+                                        executeExtraCommand(exports.projectPath, framework, language,drivername);
                                     } else {
                                         console.log("Enter valid QAS supported driver.name .!");
                                         doYouWantToExit();
                                     }
                                 } else {
                                     changeJasminProperties(exports.projectPath, true,drivername,"/env.js", function(response){
-                                        executeExtraCommand(exports.projectPath, framework, language,drivername);
                                     });
+                                    executeExtraCommand(exports.projectPath, framework, language,drivername);
                                 }
                             } else {
                                 console.log("Project platform is not supported by QAS CLI");
@@ -330,16 +330,16 @@ function gitCheckoutWithInquer(cmdPerform, path,drivername) {
                                 if (framework === 'cucumber') {
                                     if (checkExistingDriverName(exports.projectPath, drivername, language, framework)) {
                                         loadPropertiesFromEachPathTSJS(exports.projectPath + "/resources/", true,drivername,function(response){
+                                        });
 											executeExtraCommand(exports.projectPath, framework, language,drivername);
-										});
                                     } else {
                                         console.log("Enter valid QAS supported driver.name .!");
                                         doYouWantToExit();
                                     }
                                 } else {
                                     changeJasminProperties(exports.projectPath, true,drivername,"/env.ts",function(response){
+                                    });
 										executeExtraCommand(exports.projectPath, framework, language,drivername);
-									});
                                 }
                             } else {
                                 console.log("Project platform is not supported by QAS CLI");
@@ -411,8 +411,8 @@ function checkoutFromLocalRepository(drivername) {
                                 if (checkExistingDriverName(path, drivername, language, framework)) {
                                     if (checkExistingPlatform(path)) {
                                         loadPropertiesFromEachPath(path + "/resources/", true,drivername, function(response){
-                                            doJavaScriptExecution(path, framework, language,drivername);
                                         });
+                                        doJavaScriptExecution(path, framework, language,drivername);
                                     } else {
                                         console.log("Project platform is not supported by QAS CLI");
                                         doYouWantToExit();
@@ -478,8 +478,8 @@ function checkoutFromLocalRepository(drivername) {
                                     if (framework === 'cucumber') {
                                         if (checkExistingDriverName(path, drivername, language, framework)) {
                                             loadPropertiesFromEachPathTSJS(path + "/resources/", true,drivername,function(response){
+                                            });
 												executeExtraCommand(path, framework, language,drivername);
-											});
                                         } else {
                                             console.log("Enter valid QAS supported driver.name .!");
                                             doYouWantToExit();
@@ -487,8 +487,8 @@ function checkoutFromLocalRepository(drivername) {
                                     }
                                     else {
                                         changeJasminProperties(path, true,drivername,"/env.js", function(response){
+                                        });
 											executeExtraCommand(path, framework, language,drivername);
-										});
                                     }
                                 } else {
                                     console.log("Project platform is not supported by QAS CLI");
@@ -519,8 +519,8 @@ function checkoutFromLocalRepository(drivername) {
                                     if (framework === 'cucumber') {
                                         if (checkExistingDriverName(path, drivername, language, framework)) {
                                             loadPropertiesFromEachPathTSJS(path + "/resources/", true,drivername,function(response){
+                                            });
 												executeExtraCommand(path, framework, language,drivername);
-											});
                                         } else {
                                             console.log("Enter valid QAS supported driver.name .!");
                                             doYouWantToExit();
@@ -528,8 +528,8 @@ function checkoutFromLocalRepository(drivername) {
                                     }
                                     else {
                                         changeJasminProperties(path, true,drivername,"/env.ts",function(response){
+                                        });
 											executeExtraCommand(path, framework, language,drivername);
-										});
                                     }
                                 } else {
                                     console.log("Project platform is not supported by QAS CLI");
@@ -991,7 +991,7 @@ function loadPropertiesFromEachPathTSJS(path, isSave,drivername,callback) {
 });
 }
 function loadPropertiesFromEachPath(path, isSave,drivername,callback) {
-    changeDriverVariableInApplicationProperties(path,drivername,isSave);
+    changeDriverVariableInApplicationProperties(path, drivername, isSave, function (response) {
     var platforms = ['web', 'mobileweb'];
     platforms.forEach(function (element) {
         var platformDir = path + "/" + element + "/";
@@ -1067,6 +1067,7 @@ function loadPropertiesFromEachPath(path, isSave,drivername,callback) {
             });
         }
     });
+});
 }
 function saveEnvFile(content, fileToWrite, callback) {
     fs.existsSync(fileToWrite);
@@ -1654,7 +1655,6 @@ function cronExecution(path, chrmdriverPath, language, framework, drivername, cm
                                 if (language === 'java' || language === 'python') {
                                     if (framework !== 'junit' && language === 'java') {
                                         loadPropertiesFromEachPath(path, true, drivername, function (response) {
-                                            executeCiCdComandJavaAndPython(path, chrmdriverPath, framework, language, drivername, cmd);
                                         });
                                     }
                                     if (framework === 'robot') {
@@ -1667,8 +1667,8 @@ function cronExecution(path, chrmdriverPath, language, framework, drivername, cm
                                 } else {
                                     if (framework === 'cucumber') {
                                         loadPropertiesFromEachPathTSJS(path + "/resources/", true, drivername, function (response) {
-                                            executeCiCdComandJSAndTS(path, framework, language, drivername, cmd);
                                         });
+                                        executeCiCdComandJSAndTS(path, framework, language, drivername, cmd);
                                     }
                                     if (framework === 'jasmine') {
                                         var filenameWthLang = "";
@@ -1678,8 +1678,8 @@ function cronExecution(path, chrmdriverPath, language, framework, drivername, cm
                                             filenameWthLang = "/env.ts";
                                         }
                                         changeJasminProperties(path, true, drivername, filenameWthLang, function (response) {
-                                            executeCiCdComandJSAndTS(path, framework, language, drivername, cmd);
                                         });
+                                        executeCiCdComandJSAndTS(path, framework, language, drivername, cmd);
                                     }
                                 }
                                 console.log("Execution is scheduled ,wait for next execution");
