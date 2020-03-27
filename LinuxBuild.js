@@ -1870,59 +1870,7 @@ function askForScheduling(path, chrmdriverPath, language, framework, drivername)
                         var cronString = "*/" + sMinutes + " " + sHours + " * * *";
                         // var cronString = "0 0/" + sMinutes + " 0/" + sHours;
                         console.log("Execution is scheduled ,wait for next execution");
-                        askingEndDateOfSchedular(cronPattern, function (response) {
-                            if (language === 'java' || language === 'python') {
-                                exports.isFirstRunForSchedule = true;
-                                executeCiCdComandJavaAndPython(path, chrmdriverPath, framework, language, drivername, cmd);
-                            } else {
-                                exports.isFirstRunForSchedule = true;
-                                executeCiCdComandJSAndTS(path, framework, language, drivername, cmd);
-                            }
-                            console.log("Please wait for next execution.");
-                            if (exports.isValidCommand) {
-                                const a = new CronJob(cronString, function () {
-                                    exports.isFirstRunForSchedule = false;
-                                    scheduleJob = true;
-                                    if (language === 'java' || language === 'python') {
-                                        if (framework !== 'junit' && language === 'java') {
-                                            loadPropertiesFromEachPath(path, true, drivername, function (response) {
-                                            });
-                                        }
-                                        if (framework === 'robot') {
-                                            changePythonRobotProperties(path, true, drivername);
-                                        }
-                                        if (framework === 'behave') {
-                                            changePythonBehaveProperties(path, true, drivername);
-                                        }
-                                        executeCiCdComandJavaAndPython(path, chrmdriverPath, framework, language, drivername, cmd);
-                                    } else {
-                                        if (framework === 'cucumber') {
-                                            loadPropertiesFromEachPathTSJS(path + "/resources/", true, drivername, function (response) {
-                                            });
-                                            executeCiCdComandJSAndTS(path, framework, language, drivername, cmd);
-                                        }
-                                        if (framework === 'jasmine') {
-                                            var filenameWthLang = "";
-                                            if (language === 'javascript') {
-                                                filenameWthLang = "/env.js";
-                                            } else {
-                                                filenameWthLang = "/env.ts";
-                                            }
-                                            changeJasminProperties(path, true, drivername, filenameWthLang, function (response) {
-                                            });
-                                            executeCiCdComandJSAndTS(path, framework, language, drivername, cmd);
-                                        }
-                                    }
-                                    console.log("Execution is scheduled ,wait for next execution");
-
-                                }, null, true, Intl.DateTimeFormat().resolvedOptions().timeZone);
-                                /* setTimeout(() => { 
-                                     a.stop();
-                                    console.log('scheduler stopped');
-                                }, getEnddateMilisecond(response,cronPattern)); */
-                                setTimeout(() => { schedulerStop(a) }, exports.miliesecondDuration);
-                            }
-                        });
+                        askingEndDateOfSchedular(cronPattern,cronString,path, chrmdriverPath, language, framework, drivername, cmd);
                     } else {
                         cronExecution(path, chrmdriverPath, language, framework, drivername, cmd);
                     }
@@ -2200,7 +2148,7 @@ function is_valid_date(value) {
     }
 }
 
-function askingEndDateOfSchedular(hhmmDateString,callback) {
+function askingEndDateOfSchedular(hhmmDateString,cronString,path, chrmdriverPath, language, framework, drivername, cmd) {
 	// 22-05-2013 11:23:22
 	var dateTime;
 	inquirer
@@ -2226,23 +2174,73 @@ function askingEndDateOfSchedular(hhmmDateString,callback) {
 						var days = duration.asMilliseconds();
 						// console.log("Duration : " + Math.ceil(days));
 						exports.miliesecondDuration=Math.ceil(days);
-						callback(dateTime);
+						///
+						if (language === 'java' || language === 'python') {
+							exports.isFirstRunForSchedule = true;
+							executeCiCdComandJavaAndPython(path, chrmdriverPath, framework, language, drivername, cmd);
+						} else {
+							exports.isFirstRunForSchedule = true;
+							executeCiCdComandJSAndTS(path, framework, language, drivername, cmd);
+						}
+						console.log("Please wait for next execution.");
+						if (exports.isValidCommand) {
+							const a =new CronJob(cronString, function () {
+								exports.isFirstRunForSchedule = false;
+								scheduleJob = true;
+								if (language === 'java' || language === 'python') {
+									if (framework !== 'junit' && language === 'java') {
+										loadPropertiesFromEachPath(path, true, drivername, function (response) {
+										});
+									}
+									if (framework === 'robot') {
+										changePythonRobotProperties(path, true, drivername);
+									}
+									if (framework === 'behave') {
+										changePythonBehaveProperties(path, true, drivername);
+									}
+									executeCiCdComandJavaAndPython(path, chrmdriverPath, framework, language, drivername, cmd);
+								} else {
+									if (framework === 'cucumber') {
+										loadPropertiesFromEachPathTSJS(path + "/resources/", true, drivername, function (response) {
+										});
+										executeCiCdComandJSAndTS(path, framework, language, drivername, cmd);
+									}
+									if (framework === 'jasmine') {
+										var filenameWthLang = "";
+										if (language === 'javascript') {
+											filenameWthLang = "/env.js";
+										} else {
+											filenameWthLang = "/env.ts";
+										}
+										changeJasminProperties(path, true, drivername, filenameWthLang, function (response) {
+										});
+										executeCiCdComandJSAndTS(path, framework, language, drivername, cmd);
+									}
+								}
+								console.log("Execution is scheduled ,wait for next execution");
+
+							}, null, true, Intl.DateTimeFormat().resolvedOptions().timeZone);
+							/* setTimeout(() => { 
+								 a.stop();
+								console.log('scheduler stopped');
+							}, getEnddateMilisecond(response,cronPattern)); */
+							setTimeout(() => { schedulerStop(a) }, exports.miliesecondDuration);
+						}
 					} else {
 						console.log("Enddate should be greater then current schedule date");
-						askingEndDateOfSchedular(hhmmDateString,callback);
+						askingEndDateOfSchedular(hhmmDateString,cronString,path, chrmdriverPath, language, framework, drivername, cmd);
 					}
 				} else {
 					console.log("Enter valid datetime.");
-					askingEndDateOfSchedular(hhmmDateString,callback);
+					askingEndDateOfSchedular(hhmmDateString,cronString,path, chrmdriverPath, language, framework, drivername, cmd);
 				}
 			} //check
 			else {
 				console.log("Enter valid datetime.");
-				askingEndDateOfSchedular(hhmmDateString,callback);
+				askingEndDateOfSchedular(hhmmDateString,cronString,path, chrmdriverPath, language, framework, drivername, cmd);
 			}
 		});
 }
-
 let schedulerStop = (a) => {
     a.stop();
 	console.log('Your scheduler stopped as per your enddate.');
