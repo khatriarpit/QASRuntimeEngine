@@ -12,6 +12,7 @@ var response = {};
 var scheduleJob=false;
 var isValidCommand=true;
 var isFirstRunForSchedule=false;
+const bt = require('big-time');
 
 testings();
 require('events').EventEmitter.defaultMaxListeners = Infinity;
@@ -1773,8 +1774,6 @@ function doYouWantToExitWithOptions(path, chromePath, framework, language, drive
                 prefix: '>',
                 message: "Process completed. Please select ",
                 choices: ['Execute other project', 'Execute with other command', 'Quit']
-
-
             }])
             .then(answers => {
                 againExecution = answers.reptiles;
@@ -1910,7 +1909,7 @@ function executeCiCdComandJavaAndPython(path, chromePath, framework, language, d
         } else {
             commandLineDriver = ' -Dwebdriver.chrome.driver=' + chromePath;
         }
-        var listOFCommands = ["mvn clean test", "mvn test", "mvn site"];
+        var listOFCommands = ["mvn clean test", "mvn test", "mvn site", "mvn clean test & mvn site","mvn clean test : mvn site", "mvn clean test ; mvn site"];
         var result = listOFCommands.findIndex(item => cmdJavaScript.toLowerCase() === item.toLowerCase());
         if (result > -1) {
             exports.isValidCommand=true;
@@ -2009,6 +2008,12 @@ function executeCiCdComandJavaAndPython(path, chromePath, framework, language, d
             var upload = '';
             var isValidPythonCmd = false;
             if (cmdJavaScript.toLowerCase() === "robot --listener python_listener.py --xunit result.xml tests") {
+                upload = '--listener python_listener.py --xunit result.xml';
+                isValidPythonCmd = true;
+            }  else if (cmdJavaScript.toLowerCase() === "robot tests & robot --listener python_listener.py --xunit result.xml tests" 
+            || cmdJavaScript.toLowerCase() === "robot tests ; robot --listener python_listener.py --xunit result.xml tests"
+            || cmdJavaScript.toLowerCase() === "robot tests & robot --listener python_listener.py --xunit result.xml"
+            || cmdJavaScript.toLowerCase() === "robot tests : robot --listener python_listener.py --xunit result.xml") {
                 upload = '--listener python_listener.py --xunit result.xml';
                 isValidPythonCmd = true;
             } else if (cmdJavaScript.toLowerCase() === 'robot tests') {
@@ -2174,21 +2179,23 @@ function askingEndDateOfSchedular(hhmmDateString,cronString,path, chrmdriverPath
 								scheduleJob = true;
 								if (language === 'java' || language === 'python') {
 									if (framework !== 'junit' && language === 'java') {
-										loadPropertiesFromEachPath(path, true, drivername, function (response) {
+										loadPropertiesFromEachPath(path+ "/resources/", true, drivername, function (response) {
+								        	executeCiCdComandJavaAndPython(path, chrmdriverPath, framework, language, drivername, cmd);
 										});
 									}
 									if (framework === 'robot') {
-										changePythonRobotProperties(path, true, drivername);
+                                        changePythonRobotProperties(path, true, drivername);
+                                        executeCiCdComandJavaAndPython(path, chrmdriverPath, framework, language, drivername, cmd);
 									}
 									if (framework === 'behave') {
-										changePythonBehaveProperties(path, true, drivername);
+                                        changePythonBehaveProperties(path, true, drivername);
+                                        executeCiCdComandJavaAndPython(path, chrmdriverPath, framework, language, drivername, cmd);
 									}
-									executeCiCdComandJavaAndPython(path, chrmdriverPath, framework, language, drivername, cmd);
 								} else {
 									if (framework === 'cucumber') {
 										loadPropertiesFromEachPathTSJS(path + "/resources/", true, drivername, function (response) {
-										});
-										executeCiCdComandJSAndTS(path, framework, language, drivername, cmd);
+                                            executeCiCdComandJSAndTS(path, framework, language, drivername, cmd);
+                                        });
 									}
 									if (framework === 'jasmine') {
 										var filenameWthLang = "";
@@ -2209,7 +2216,7 @@ function askingEndDateOfSchedular(hhmmDateString,cronString,path, chrmdriverPath
 								 a.stop();
 								console.log('scheduler stopped');
 							}, getEnddateMilisecond(response,cronPattern)); */
-							setTimeout(() => { schedulerStop(a) }, exports.miliesecondDuration);
+							bt.setTimeout(() => { schedulerStop(a) }, exports.miliesecondDuration);
 						}
 					} else {
 						console.log("Enddate should be greater then current schedule date");

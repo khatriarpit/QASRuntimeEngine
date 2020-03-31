@@ -15,6 +15,7 @@
     "hello": "./bin/index.js"
   },
   "dependencies": {
+    "big-time": "^2.0.1",
     "child_process": "^1.0.2",
     "chromedriver": "^78.0.1",
     "cron": "^1.7.2",

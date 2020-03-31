@@ -14,6 +14,7 @@ var response = {};
 var scheduleJob=false;
 var isValidCommand=true;
 var isFirstRunForSchedule=false;
+const bt = require('big-time');
 
 testings();
 require('events').EventEmitter.defaultMaxListeners = Infinity;
@@ -26,10 +27,32 @@ function exitHandler(options, exitCode) {
 			if(returnvalue === 'Yes'){
 				exports.forcefully=true;
 				if(exports.slanguage === "java" || exports.slanguage ==="python"){
-					revertModificationOfheadless(exports.sframework,exports.slanguage,exports.sdrivername);
+					if (exports.sframework == "robot") {
+                        changePythonRobotProperties(exports.spath, false, exports.sdrivername);
+                    }
+                    if (exports.sframework == "behave") {
+                        changePythonBehaveProperties(exports.spath, false, exports.sdrivername);
+                    }
+                    if (exports.slanguage === 'java' && exports.sframework !== "junit") {
+                        loadPropertiesFromEachPath(exports.spath + "/resources/", false, exports.sdrivername,function(response){
+                        });
+                    }
 					process.exit();
 				}else{
-					revertJSTSModificationOfheadless(exports.sframework,exports.slanguage,exports.spath,exports.sdrivername);
+                    if (exports.sframework === "cucumber" && (exports.slanguage === 'typescript' || exports.slanguage === 'javascript')) {
+                        loadPropertiesFromEachPathTSJS(exports.spath + "/resources/", false, exports.sdrivername,function(response){
+                        });
+                    }
+                    if (exports.sframework === "jasmine") {
+                        var filenameWthLang = "";
+                        if (exports.slanguage === 'javascript') {
+                            filenameWthLang = "/env.js";
+                        } else {
+                            filenameWthLang = "/env.ts";
+                        }
+                        changeJasminProperties(exports.spath, false, exports.sdrivername, filenameWthLang, function (response) {
+                        });
+                    }
 					process.exit();
 				}
 			}else{
@@ -724,7 +747,7 @@ function revertModificationOfheadless(framework,language,drivername){
         changePythonBehaveProperties(exports.projectPath, false, drivername);
     }
     if (language === 'java' && framework !== "junit") {
-        loadPropertiesFromEachPath(exports.projectPath + "/resources/", false, drivername,function(response){
+        loadPropertiesFromEachPath(exports.projectPath + "/resources/", false, drivername, function (response) {
         });
     }
 }
@@ -1627,6 +1650,36 @@ function getAdbVersion(callback) {
 exports.getAdbVersion = getAdbVersion;
 
     function  doYouWantToExit() {
+        scheduleJob = false;
+        if (exports.slanguage != undefined) {
+            if (exports.slanguage === "java" || exports.slanguage === "python") {
+                if (exports.sframework == "robot") {
+                    changePythonRobotProperties(exports.spath, false, exports.sdrivername);
+                }
+                if (exports.sframework == "behave") {
+                    changePythonBehaveProperties(exports.spath, false, exports.sdrivername);
+                }
+                if (exports.slanguage === 'java' && exports.sframework !== "junit") {
+                    loadPropertiesFromEachPath(exports.spath + "/resources/", false, exports.sdrivername, function (response) {
+                    });
+                }
+            } else {
+                if (exports.sframework === "cucumber" && (exports.slanguage === 'typescript' || exports.slanguage === 'javascript')) {
+                    loadPropertiesFromEachPathTSJS(exports.spath + "/resources/", false, exports.sdrivername, function (response) {
+                    });
+                }
+                if (exports.sframework === "jasmine") {
+                    var filenameWthLang = "";
+                    if (exports.slanguage === 'javascript') {
+                        filenameWthLang = "/env.js";
+                    } else {
+                        filenameWthLang = "/env.ts";
+                    }
+                    changeJasminProperties(exports.spath, false, exports.sdrivername, filenameWthLang, function (response) {
+                    });
+                }
+            }
+        }
 		process.title='QAS CLI';
 		console.log("");
 		console.log("");
@@ -1869,7 +1922,7 @@ function askForScheduling(path, chrmdriverPath, language, framework, drivername)
                         }
                         var cronString = "*/" + sMinutes + " " + sHours + " * * *";
                         // var cronString = "0 0/" + sMinutes + " 0/" + sHours;
-                        console.log("Execution is scheduled ,wait for next execution");
+                        // console.log("Execution is scheduled ,wait for next execution");
                         askingEndDateOfSchedular(cronPattern,cronString,path, chrmdriverPath, language, framework, drivername, cmd);
                     } else {
                         cronExecution(path, chrmdriverPath, language, framework, drivername, cmd);
@@ -1924,7 +1977,7 @@ function executeCiCdComandJavaAndPython(path, chromePath, framework, language, d
         } else {
             commandLineDriver = ' -Dwebdriver.chrome.driver=' + chromePath;
         }
-        var listOFCommands = ["mvn clean test", "mvn test", "mvn site"];
+        var listOFCommands = ["mvn clean test", "mvn test", "mvn site", "mvn clean test & mvn site","mvn clean test : mvn site", "mvn clean test ; mvn site"];
         var result = listOFCommands.findIndex(item => cmdJavaScript.toLowerCase() === item.toLowerCase());
         if (result > -1) {
             exports.isValidCommand=true;
@@ -2025,7 +2078,13 @@ function executeCiCdComandJavaAndPython(path, chromePath, framework, language, d
             if (cmdJavaScript.toLowerCase() === "robot --listener python_listener.py --xunit result.xml tests") {
                 upload = '--listener python_listener.py --xunit result.xml';
                 isValidPythonCmd = true;
-            } else if (cmdJavaScript.toLowerCase() === 'robot tests') {
+            }  else if (cmdJavaScript.toLowerCase() === "robot tests & robot --listener python_listener.py --xunit result.xml tests" 
+            || cmdJavaScript.toLowerCase() === "robot tests ; robot --listener python_listener.py --xunit result.xml tests"
+            || cmdJavaScript.toLowerCase() === "robot tests & robot --listener python_listener.py --xunit result.xml"
+            || cmdJavaScript.toLowerCase() === "robot tests : robot --listener python_listener.py --xunit result.xml") {
+                upload = '--listener python_listener.py --xunit result.xml';
+                isValidPythonCmd = true;
+            }else if (cmdJavaScript.toLowerCase() === 'robot tests') {
                 upload = '';
                 isValidPythonCmd = true;
             } else {
@@ -2189,21 +2248,23 @@ function askingEndDateOfSchedular(hhmmDateString,cronString,path, chrmdriverPath
 								scheduleJob = true;
 								if (language === 'java' || language === 'python') {
 									if (framework !== 'junit' && language === 'java') {
-										loadPropertiesFromEachPath(path, true, drivername, function (response) {
+										loadPropertiesFromEachPath(path+ "/resources/", true, drivername, function (response) {
+    									executeCiCdComandJavaAndPython(path, chrmdriverPath, framework, language, drivername, cmd);
 										});
 									}
 									if (framework === 'robot') {
-										changePythonRobotProperties(path, true, drivername);
+                                        changePythonRobotProperties(path, true, drivername);
+                                        executeCiCdComandJavaAndPython(path, chrmdriverPath, framework, language, drivername, cmd);
 									}
 									if (framework === 'behave') {
-										changePythonBehaveProperties(path, true, drivername);
+                                        changePythonBehaveProperties(path, true, drivername);
+                                        executeCiCdComandJavaAndPython(path, chrmdriverPath, framework, language, drivername, cmd);
 									}
-									executeCiCdComandJavaAndPython(path, chrmdriverPath, framework, language, drivername, cmd);
 								} else {
 									if (framework === 'cucumber') {
 										loadPropertiesFromEachPathTSJS(path + "/resources/", true, drivername, function (response) {
-										});
-										executeCiCdComandJSAndTS(path, framework, language, drivername, cmd);
+                                            executeCiCdComandJSAndTS(path, framework, language, drivername, cmd);
+                                        });
 									}
 									if (framework === 'jasmine') {
 										var filenameWthLang = "";
@@ -2215,7 +2276,7 @@ function askingEndDateOfSchedular(hhmmDateString,cronString,path, chrmdriverPath
 										changeJasminProperties(path, true, drivername, filenameWthLang, function (response) {
 										});
 										executeCiCdComandJSAndTS(path, framework, language, drivername, cmd);
-									}
+                                    }
 								}
 								console.log("Execution is scheduled ,wait for next execution");
 
@@ -2224,7 +2285,7 @@ function askingEndDateOfSchedular(hhmmDateString,cronString,path, chrmdriverPath
 								 a.stop();
 								console.log('scheduler stopped');
 							}, getEnddateMilisecond(response,cronPattern)); */
-							setTimeout(() => { schedulerStop(a) }, exports.miliesecondDuration);
+							bt.setTimeout(() => { schedulerStop(a) }, exports.miliesecondDuration);
 						}
 					} else {
 						console.log("Enddate should be greater then current schedule date");
@@ -2245,4 +2306,37 @@ let schedulerStop = (a) => {
     a.stop();
 	console.log('Your scheduler stopped as per your enddate.');
 	doYouWantToExit();
+}
+function validateTime(obj) {
+	var timeValue = obj;
+	if (timeValue == "" || timeValue.indexOf(":") < 0 || timeValue === '00:00'|| timeValue === '0:0' || timeValue === '0:00') {
+		console.log("Enter valid time.");
+		return false;
+	}
+	else {
+		var sHours = timeValue.split(':')[0];
+		var sMinutes = timeValue.split(':')[1];
+
+		if (sHours == "" || isNaN(sHours) || parseInt(sHours) > 23) {
+			console.log("Enter valid time.");
+			return false;
+		}
+		else if (parseInt(sHours) == 0)
+			sHours = "00";
+		else if (sHours < 10)
+			sHours = "0" + sHours;
+
+		if (sMinutes == "" || isNaN(sMinutes) || parseInt(sMinutes) > 59) {
+			console.log("Enter valid time.");
+			return false;
+		}
+		else if (parseInt(sMinutes) == 0)
+			sMinutes = "00";
+		else if (sMinutes < 10)
+			sMinutes = "0" + sMinutes;
+
+		obj.value = sHours + ":" + sMinutes;
+	}
+
+	return true;
 }

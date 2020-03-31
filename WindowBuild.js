@@ -7,6 +7,7 @@ var pathObject = require("path");
 var inquirer = require('inquirer');
 var CronJob = require('cron').CronJob;
 var moment = require('moment-timezone');
+const bt = require('big-time');
 var inputProjectMode;
 var  response = {};
 var scheduleJob=false;
@@ -992,6 +993,7 @@ function loadPropertiesFromEachPathTSJS(path, isSave,drivername,callback) {
 function loadPropertiesFromEachPath(path, isSave,drivername ,callback) {
 	changeDriverVariableInApplicationProperties(path, drivername, isSave, function (response) {
 		var platforms = ['web', 'mobileweb'];
+		var cnt=0;
 		platforms.forEach(function (element) {
 			var platformDir = path + "/" + element + "/";
 			if (fs.existsSync(platformDir)) {
@@ -1053,16 +1055,21 @@ function loadPropertiesFromEachPath(path, isSave,drivername ,callback) {
 							var key = typeof objectValueMap[i] === 'object' ? JSON.stringify(objectValueMap[i]) : objectValueMap[i];
 							str += i + '=' + key + '\n';
 						}
-						callback("fileRes");
+					//	callback("fileRes");
 						saveEnvFile(str, platformDir + "env.properties", function (fileRes) {
-							console.log(fileRes);
+							cnt++;
 						});
 					}else{
-						callback("result not file search");
+						cnt++;
 					}
 				});
+			}else{
+				cnt++;
 			}
 		});
+		if(cnt >=1){
+			callback("done");
+		}
 	});
 }
 
@@ -1833,7 +1840,7 @@ function executeCiCdComandJavaAndPython(path, chromePath, framework, language, d
 		} else {
 			commandLineDriver = ' -Dwebdriver.chrome.driver=' + chromePath;
 		}
-		var listOFCommands = ["mvn clean test", "mvn test", "mvn site"];
+		var listOFCommands = ["mvn clean test", "mvn test", "mvn site", "mvn clean test & mvn site", "mvn clean test ; mvn site"];
 		var result = listOFCommands.findIndex(item => cmdJavaScript.toLowerCase() === item.toLowerCase());
 		if (result > -1) {
 			// console.log("setting valid command"+exports.isValidCommand);
@@ -1933,7 +1940,12 @@ function executeCiCdComandJavaAndPython(path, chromePath, framework, language, d
 			if (cmdJavaScript.toLowerCase() === "robot --listener python_listener.py --xunit result.xml tests") {
 				upload = '--listener python_listener.py --xunit result.xml';
 				isValidPythonCmd = true;
-			} else if (cmdJavaScript.toLowerCase() === 'robot tests') {
+			} else if (cmdJavaScript.toLowerCase() === "robot tests & robot --listener python_listener.py --xunit result.xml tests" 
+					 || cmdJavaScript.toLowerCase() === "robot tests ; robot --listener python_listener.py --xunit result.xml tests"
+					 || cmdJavaScript.toLowerCase() === "robot tests & robot --listener python_listener.py --xunit result.xml") {
+				upload = '--listener python_listener.py --xunit result.xml';
+				isValidPythonCmd = true;
+			}else if (cmdJavaScript.toLowerCase() === 'robot tests') {
 				upload = '';
 				isValidPythonCmd = true;
 			} else {
@@ -2143,21 +2155,23 @@ function askingEndDateOfSchedular(hhmmDateString,cronString,path, chrmdriverPath
 								scheduleJob = true;
 								if (language === 'java' || language === 'python') {
 									if (framework !== 'junit' && language === 'java') {
-										loadPropertiesFromEachPath(path, true, drivername, function (response) {
+										loadPropertiesFromEachPath(path+ "/resources/", true, drivername, function (response) {
+											executeCiCdComandJavaAndPython(path, chrmdriverPath, framework, language, drivername, cmd);
 										});
 									}
 									if (framework === 'robot') {
 										changePythonRobotProperties(path, true, drivername);
+										executeCiCdComandJavaAndPython(path, chrmdriverPath, framework, language, drivername, cmd);
 									}
 									if (framework === 'behave') {
 										changePythonBehaveProperties(path, true, drivername);
+										executeCiCdComandJavaAndPython(path, chrmdriverPath, framework, language, drivername, cmd);
 									}
-									executeCiCdComandJavaAndPython(path, chrmdriverPath, framework, language, drivername, cmd);
 								} else {
 									if (framework === 'cucumber') {
 										loadPropertiesFromEachPathTSJS(path + "/resources/", true, drivername, function (response) {
+											executeCiCdComandJSAndTS(path, framework, language, drivername, cmd);
 										});
-										executeCiCdComandJSAndTS(path, framework, language, drivername, cmd);
 									}
 									if (framework === 'jasmine') {
 										var filenameWthLang = "";
@@ -2178,7 +2192,7 @@ function askingEndDateOfSchedular(hhmmDateString,cronString,path, chrmdriverPath
 								 a.stop();
 								console.log('scheduler stopped');
 							}, getEnddateMilisecond(response,cronPattern)); */
-							setTimeout(() => { schedulerStop(a) }, exports.miliesecondDuration);
+							bt.setTimeout(() => { schedulerStop(a) }, exports.miliesecondDuration);
 						}
 					} else {
 						console.log("Enddate should be greater then current schedule date");
