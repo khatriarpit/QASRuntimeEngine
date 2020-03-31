@@ -2214,10 +2214,10 @@ function askingEndDateOfSchedular(hhmmDateString,cronString,path, chrmdriverPath
 	.prompt([{
 		type: "input",
 		prefix: '>',
-		name: "Enter end date of scheduling (YYYY-MM-DD HH:MM:SS)?"
+		name: "Enter end date of scheduling (YYYY-MM-DD HH:MM:SS)"
 	}])
 	.then(answers => {
-		dateTime = answers["Enter end date of scheduling (YYYY-MM-DD HH:MM:SS)?"];
+		dateTime = answers["Enter end date of scheduling (YYYY-MM-DD HH:MM:SS)"];
 			if (dateTime !== undefined && dateTime !== '' && dateTime !== null) {
 				var today = new Date();
 				today.setHours(today.getHours() + parseInt(hhmmDateString.split(":")[0]));
@@ -2288,7 +2288,7 @@ function askingEndDateOfSchedular(hhmmDateString,cronString,path, chrmdriverPath
 							bt.setTimeout(() => { schedulerStop(a) }, exports.miliesecondDuration);
 						}
 					} else {
-						console.log("Enddate should be greater then current schedule date");
+						console.log("End date should be greater then current schedule date");
 						askingEndDateOfSchedular(hhmmDateString,cronString,path, chrmdriverPath, language, framework, drivername, cmd);
 					}
 				} else {
@@ -2304,7 +2304,7 @@ function askingEndDateOfSchedular(hhmmDateString,cronString,path, chrmdriverPath
 }
 let schedulerStop = (a) => {
     a.stop();
-	console.log('Your scheduler stopped as per your enddate.');
+	console.log('Your scheduler stopped as per your end date.');
 	doYouWantToExit();
 }
 function validateTime(obj) {
