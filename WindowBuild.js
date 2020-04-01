@@ -198,6 +198,7 @@ function gitCheckoutWithInquer(cmdPerform, path,drivername) {
 			var framework = oldProjectConfiguration.framework;
 			console.log("QAS CLI works only for web and mobile web frameworks.");
 			console.log('');
+			modificationPreviousChanges(exports.projectPath,language,framework);
 			if (language !== undefined && language !== '' && language === 'java') {
 				// if (setDriver()) {
 					var isValid=true;
@@ -386,6 +387,7 @@ function checkoutFromLocalRepository(drivername) {
 					var framework = oldProjectConfiguration.framework;
 					console.log("QAS CLI works only for web and mobile web frameworks.");
 					console.log('');
+					modificationPreviousChanges(path,language,framework);
 					if (language !== undefined && language !== '' && language === 'java') {
 						var isValid=true;
 						if (response['mvn'] === null || response['mvn'] === '' || response['mvn'] === 'undefined') {
@@ -1817,12 +1819,14 @@ function changeDriverNameInApplicationProperties(path,driverName,isSave, callbac
 
 function changeDriverVariableInApplicationProperties(path,driverName,isSave,callback){
 	if (driverName === 'firefoxDriver' &&  (fs.existsSync(path)) ) {
+		fs.writeFileSync(path + "/application.properties", fs.readFileSync(path + "/application.properties", 'utf8').replace("system.webdriver.gecko.driver", "webdriver.gecko.driver"));
 		if (checkDirectorySync(path + '/application.properties')) {
 			if (isSave) {
-				fs.writeFileSync(path + "/application.properties", fs.readFileSync(path + "/application.properties", 'utf8').replace("system.webdriver.gecko.driver", "webdriver.gecko.driver"));
+				// fs.writeFileSync(path + "/application.properties", fs.readFileSync(path + "/application.properties", 'utf8').replace("system.webdriver.gecko.driver", "webdriver.gecko.driver"));
 				callback("done");
 			} else {
 				fs.writeFileSync(path + "/application.properties", fs.readFileSync(path + "/application.properties", 'utf8').replace("webdriver.gecko.driver", "system.webdriver.gecko.driver"));
+				fs.writeFileSync(path + "/application.properties", fs.readFileSync(path + "/application.properties", 'utf8').replace("system.webdriver.gecko.driver=undefined", "system.webdriver.gecko.driver =<GECKO_DRIVER_PATH>"));
 				callback("done");
 			}
 		}
@@ -1928,11 +1932,16 @@ function executeCiCdComandJavaAndPython(path, chromePath, framework, language, d
 			doYouWantToExitWithOptions(path, chromePath, framework, language, drivername);
 		}
 	} else {
-		// var existingPath = shell.exec("echo %PATH%");
 		if (drivername === 'firefoxDriver') {
-			shell.env["geckodriver"] = chromePath;
+			const path = require('path');
+			process.env.PATH += path.delimiter + path.join(chromePath, '..');
+			exports.path =  path.join(chromePath, '..', 'geckodriver.exe')  ;
+			exports.defaultInstance = require('child_process').execFile(exports.path);
 		} else {
-			shell.env["chromedriver"] = chromePath;
+			const path = require('path');
+			process.env.PATH += path.delimiter + path.join(chromePath, '..');
+			exports.path =  path.join(chromePath, '..', 'chromedriver.exe')  ;
+			exports.defaultInstance = require('child_process').execFile(exports.path);
 		}
 		if (framework === 'robot') {
 			var upload = '';
@@ -2216,3 +2225,207 @@ let schedulerStop = (a) => {
 	doYouWantToExit();
 }
 
+
+function changeJasminPropertiesRevert(path,filename) {
+	var platforms = ['web', 'mobileweb'];
+	platforms.forEach(function (element) {
+		var platformDir = path + "/resources/" + element + "/";
+		if (fs.existsSync(platformDir)) {
+			const filedata=fs.readFileSync(platformDir + filename, 'utf8');
+			if (element === 'web') {
+				fs.writeFileSync(platformDir + filename, findStringBetween(filedata, "capabilities:", "onPrepare:","capabilities: { \n \t \t  browserName: 'chrome' \n \t }, \n\t onPrepare: "));
+			} else {
+				fs.writeFileSync(platformDir + filename, findStringBetween(filedata, "capabilities:", "onPrepare:","capabilities: { \n \t \t  browserName: 'chrome', \n \t \t 'chromeOptions':{'mobileEmulation':{'deviceName':'iPhone X'}} \n \t }, \n\t onPrepare:"));
+			}
+		}
+	});
+}
+
+function loadPropertiesFromEachPathTSJSRevert(path) {
+	path =path + "/resources/";
+	changeDriverNameInApplicationPropertiesRevert(path);
+		var platforms = ['web', 'mobileweb'];
+		platforms.forEach(function (element) {
+			var platformDir = path + "/" + element + "/";
+			if (fs.existsSync(platformDir)) {
+				fs.readdirSync(platformDir).forEach(function (file) {
+					if (file.search("env.properties") !== -1) {
+						var property = new PropertiesReader(platformDir + "env.properties");
+						var objectValueMap = property.getAllProperties();
+						if (objectValueMap['chrome.additional.capabilities'] !== undefined) {
+							var scaps = objectValueMap['chrome.additional.capabilities'].toString().replace(/\\/g, "");
+							objectValueMap['chrome.additional.capabilities'] = JSON.parse(scaps);
+						} else {
+							objectValueMap['chrome.additional.capabilities'] = "";
+						}
+						if (objectValueMap['firefox.additional.capabilities'] !== undefined) {
+							delete objectValueMap['firefox.additional.capabilities'];
+						}
+						if (objectValueMap['chrome.additional.capabilities'] !== undefined) {
+							if (element !== 'mobileweb') {
+								delete objectValueMap['chrome.additional.capabilities'].chromeOptions;
+							} else {
+								delete objectValueMap['chrome.additional.capabilities']['chromeOptions']['args'];
+							}
+						}
+						var str = '';
+						for (var i in objectValueMap) {
+							var key = typeof objectValueMap[i] === 'object' ? JSON.stringify(objectValueMap[i]) : objectValueMap[i];
+							str += i + '=' + key + '\n';
+						}
+						saveEnvFile(str, platformDir + "env.properties", function (fileRes) {
+							console.log(fileRes);
+						});
+					}
+				});
+			}
+		});
+
+}
+
+function changePythonRobotPropertiesRevert(path) {
+	var platforms = ['web', 'mobileweb'];
+	platforms.forEach(function (element) {
+		var platformDir = path + "/steps/" + element + "/";
+		if (fs.existsSync(platformDir)) {
+					if (element === 'mobileweb') {
+						const filedata=fs.readFileSync(platformDir + "step_definitions.robot", 'utf8');
+						fs.writeFileSync(platformDir + "step_definitions.robot", findStringBetween(filedata, "Open Application", "Close Application","Open Application \n \t ${options}=         Get Chrome Mobile Options \n \t Create Webdriver    Chrome                       chrome_options=${options}\n\nClose Application"));
+					} else {
+						fs.writeFileSync(platformDir + "/step_definitions.robot", fs.readFileSync(platformDir + "/step_definitions.robot", 'utf8').replace("headlessfirefox", ' ${BROWSER}'));
+						fs.writeFileSync(platformDir + "/step_definitions.robot", fs.readFileSync(platformDir + "/step_definitions.robot", 'utf8').replace("headlesschrome", ' ${BROWSER}'));
+					}
+		}
+	});
+}
+
+
+function changePythonBehavePropertiesRevert(path) {
+    var platforms = ['web', 'mobileweb'];
+	platforms.forEach(function (element) {
+		var platformDir = path + "/resources/" + element + "/";
+		if (fs.existsSync(platformDir)) {
+			fs.readdirSync(platformDir).forEach(function (file) {
+				if (file.search("env.properties") !== -1) {
+					var property = new PropertiesReader(platformDir + "env.properties");
+					var objectValueMap = property.getAllProperties();
+					if (objectValueMap['chrome.additional.capabilities'] !== undefined) {
+						var scaps = objectValueMap['chrome.additional.capabilities'].toString().replace(/\\/g, "");
+						objectValueMap['chrome.additional.capabilities'] = JSON.parse(scaps);
+					} else {
+						objectValueMap['chrome.additional.capabilities'] = "";
+					}
+					objectValueMap['driver.name'] = 'chromeDriver';
+					if (objectValueMap['firefox.additional.capabilities'] !== undefined) {
+						delete objectValueMap['firefox.additional.capabilities'];
+					}
+					if (element === 'web') {
+						objectValueMap['chrome.additional.capabilities'] = { args: ['--start-maximized'] };
+					} else {
+						objectValueMap['chrome.additional.capabilities'] = { "chromeOptions": { "mobileEmulation": { "deviceName": "Pixel 2" } } };
+					}
+					var str = '';
+					for (var i in objectValueMap) {
+						var key = typeof objectValueMap[i] === 'object' ? JSON.stringify(objectValueMap[i]) : objectValueMap[i];
+						str += i + '=' + key + '\n';
+					}
+					saveEnvFile(str, platformDir + "env.properties", function (fileRes) {
+						console.log(fileRes);
+					});
+				}
+			});
+		}
+	});
+}
+
+
+function modificationPreviousChanges(path,language,framework){
+	if (language === 'javascript' || language === 'typescript') {
+		if (framework === 'jasmine') {
+			//Javascript Jasmine and Typescript
+			if (language === 'typescript') {
+				changeJasminPropertiesRevert(path, "env.ts");
+			} else {
+				changeJasminPropertiesRevert(path, "env.js");
+			}
+		} else {
+			// Typescript Javascript CUCUCMBer
+			loadPropertiesFromEachPathTSJSRevert(path);
+		}
+	}
+
+	//Reverting Python 
+	if(language === 'python'){
+		if (framework === 'robot') {
+			changePythonRobotPropertiesRevert(path);
+		}else{
+			changePythonBehavePropertiesRevert(path);
+		}
+	}
+
+	if(language === 'java' && framework !== 'junit'){
+		loadPropertiesFromEachPathRevert(path);
+	}
+}
+
+
+function changeDriverNameInApplicationPropertiesRevert(path){
+	if (checkDirectorySync(path + '/application.properties')) {
+		fs.writeFileSync(path + "/application.properties", fs.readFileSync(path + "/application.properties", 'utf8').replace("driver.name=firefoxDriver", "driver.name=chromeDriver"));
+	}
+}
+
+
+function findStringBetween(str, first, last,stringToReplace) {
+    str = str.replace(/(\r)/gm, "RTAB");
+    str = str.replace(/(\n)/gm, "NEWLINE");
+    var r = new RegExp(first + '(.*?)' + last, 'gm');
+    // console.log(str.match(r));
+    str = str.replace(str.match(r),stringToReplace);
+    return str.replace(/RTAB/g, '\r').replace(/NEWLINE/g, '\n');
+}
+
+function loadPropertiesFromEachPathRevert(path) {
+	path =path + "/resources/";
+	changeDriverVariableInApplicationProperties(path, "firefoxDriver", false, function (response) {
+		var platforms = ['web', 'mobileweb'];
+		var cnt=0;
+		platforms.forEach(function (element) {
+			var platformDir = path + "/" + element + "/";
+			if (fs.existsSync(platformDir)) {
+				fs.readdirSync(platformDir).forEach(function (file) {
+					if (file.search("env.properties") !== -1) {
+						var property = new PropertiesReader(platformDir + "env.properties");
+						var objectValueMap = property.getAllProperties();
+						if (objectValueMap['chrome.additional.capabilities'] !== undefined) {
+							var scaps = objectValueMap['chrome.additional.capabilities'].toString().replace(/\\/g, "");
+							objectValueMap['chrome.additional.capabilities'] = JSON.parse(scaps);
+						}
+
+						if (objectValueMap['firefox.additional.capabilities'] !== undefined) {
+							delete objectValueMap['firefox.additional.capabilities'];
+							if (element === 'web') {
+								objectValueMap['driver.name'] = 'chromeDriver';
+							}
+						}
+						if (element !== 'mobileweb') {
+							delete objectValueMap['chrome.additional.capabilities'].chromeOptions;
+						} else {
+							delete objectValueMap['chrome.additional.capabilities']['chromeOptions']['args'];
+						}
+						var str = '';
+						for (var i in objectValueMap) {
+							var key = typeof objectValueMap[i] === 'object' ? JSON.stringify(objectValueMap[i]) : objectValueMap[i];
+							str += i + '=' + key + '\n';
+						}
+					//	callback("fileRes");
+						saveEnvFile(str, platformDir + "env.properties", function (fileRes) {
+							cnt++;
+						});
+					}
+				});
+			}
+		});
+	
+	});
+}
