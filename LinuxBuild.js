@@ -701,20 +701,21 @@ function executionCommandJavaScritpTypescript(path, framework, language,driverna
 }
 
 function revertJSTSModificationOfheadless(framework,language,path,drivername){
-    if (framework === "cucumber" && (language === 'typescript' || language === 'javascript')) {
-        loadPropertiesFromEachPathTSJS(path + "/resources/", false, drivername,function(response){
-        });
-    }
-    if (framework === "jasmine") {
-        var filenameWthLang = "";
-        if (language === 'javascript') {
-            filenameWthLang = "/env.js";
-        } else {
-            filenameWthLang = "/env.ts";
-        }
-        changeJasminProperties(path, false, drivername, filenameWthLang, function (response) {
-        });
-    }
+    // if (framework === "cucumber" && (language === 'typescript' || language === 'javascript')) {
+    //     loadPropertiesFromEachPathTSJS(path + "/resources/", false, drivername,function(response){
+    //     });
+    // }
+    // if (framework === "jasmine") {
+    //     var filenameWthLang = "";
+    //     if (language === 'javascript') {
+    //         filenameWthLang = "/env.js";
+    //     } else {
+    //         filenameWthLang = "/env.ts";
+    //     }
+    //     changeJasminProperties(path, false, drivername, filenameWthLang, function (response) {
+    //     });
+    // }
+    modificationPreviousChanges(path,language,framework);
 }
 function executionCommandJava(path,chromePath, framework, language,drivername) {
     var cmdJavaScript = '';
@@ -841,7 +842,7 @@ function changePythonBehaveProperties(path, isSave,drivername) {
                                 if (element !== 'mobileweb') {
                                     objectValueMap['firefox.additional.capabilities'] = '{"browserName": "firefox","marionette": "True", "acceptInsecureCerts": "True","moz:firefoxOptions":{"args":["--headless"]}}';
                                 } else {
-                                    objectValueMap['firefox.additional.capabilities'] = { 'moz:firefoxOptions': { "args": ['--headless', '--no-sandbox', '--disable-dev-shm-usage', '--disable-gpu'] } };
+                                    objectValueMap['firefox.additional.capabilities'] = '{"browserName": "firefox","marionette": "True", "acceptInsecureCerts": "True","moz:firefoxOptions":{"args":["--headless"]}}';
                                 }
                             } else {
                                 if (element !== 'mobileweb') {
@@ -868,7 +869,7 @@ function changePythonBehaveProperties(path, isSave,drivername) {
                             str += i + '=' + key + '\n';
                         }
                         saveEnvFile(str, platformDir + "env.properties", function (fileRes) {
-                            console.log(fileRes);
+                            // console.log(fileRes);
                         });
                     }
                 });
@@ -1757,6 +1758,9 @@ exports.getAdbVersion = getAdbVersion;
     }
     
     function doYouWantToExitWithOptions(path ,chromePath, framework, language,drivername) {
+        if(scheduleJob){
+            console.log("\n Execution is scheduled ,wait for next execution");
+        }
         var isNotValidSchedule = false;
         if (exports.isFirstRunForSchedule) {
             if (!exports.isValidCommand) {
@@ -1802,8 +1806,8 @@ exports.getAdbVersion = getAdbVersion;
                         }else{
                             if (framework === 'cucumber') {
                                 loadPropertiesFromEachPathTSJS(path + "/resources/", true, drivername, function (response) {
-                                    executionCommandJavaScritpTypescript(path, framework, language, drivername);
                                 });
+                                executionCommandJavaScritpTypescript(path, framework, language, drivername);
                             }
                             if (framework === 'jasmine') {
                                 var filenameWthLang="";
@@ -1813,8 +1817,8 @@ exports.getAdbVersion = getAdbVersion;
                                     filenameWthLang="/env.ts";
                                 }
                                 changeJasminProperties(path, true,drivername,filenameWthLang, function(response){
-                                    executionCommandJavaScritpTypescript(path, framework, language, drivername);
                                 });
+                                executionCommandJavaScritpTypescript(path, framework, language, drivername);
                             }
                         }
                     } else {
@@ -1916,6 +1920,9 @@ function askForScheduling(path, chrmdriverPath, language, framework, drivername)
     
                     // 0 */15 */4 ? * *
                     if (validateTime(cronPattern)) {
+                        var a = cronPattern.split(':');
+                        var minutes = (+a[0]) * 60 + (+a[1]);
+                        exports.timeUserChoose=minutes;
                         if (sMinutes === '00' || sMinutes === '0') {
                             // console.log("zeprrroooo");
                             sMinutes = "*";
@@ -1939,6 +1946,22 @@ function askForScheduling(path, chrmdriverPath, language, framework, drivername)
 
     
 function executeCiCdComandJSAndTS(path, framework, language, drivername, cmdJavaScript) {
+    	//Code Returning to prvernt executing twice during scheduling
+	var isAllowTorun=true;
+	if(scheduleJob){
+		// console.log(new Date()+" ++++++++++++ "+exports.rundateTime);
+		var difference = new Date().getTime() - new Date(exports.rundateTime).getTime() ; // This will give difference in milliseconds
+		var resultInMinutes = Math.ceil(difference / 60000);
+		// console.log(">>>>>>>>>>>>>>>:::::::::: "+resultInMinutes); 
+		// console.log("::::::::::::::::::: "+exports.timeUserChoose)
+		//check difference is lessthen actuall timing then return
+		if(resultInMinutes < exports.timeUserChoose){
+			if(!exports.isFirstRunForSchedule){
+				isAllowTorun=false;
+			}
+		}
+	}
+	if(isAllowTorun){
     if (cmdJavaScript.indexOf('npm') <= -1) {
         exports.isValidCommand=false;
         console.log(cmdJavaScript + ' command not found.');
@@ -1968,19 +1991,45 @@ function executeCiCdComandJSAndTS(path, framework, language, drivername, cmdJava
             }
         });
     }
+    exports.rundateTime = new Date().toLocaleString();
+}
 }
 
 
 
 function executeCiCdComandJavaAndPython(path, chromePath, framework, language, drivername, cmdJavaScript) {
+    		//Code Returning to prvernt executing twice during scheduling
+	var isAllowTorun = true;
+	if (scheduleJob) {
+		// console.log(new Date() + " ++++++++++++ " + exports.rundateTime);
+		var difference = new Date().getTime() - new Date(exports.rundateTime).getTime(); // This will give difference in milliseconds
+		var resultInMinutes = Math.ceil(difference / 60000);
+		// console.log(">>>>>>>>>>>>>>>:::::::::: "+resultInMinutes); 
+			// console.log("::::::::::::::::::: "+exports.timeUserChoose)
+			//check difference is lessthen actuall timing then return
+			if(resultInMinutes < exports.timeUserChoose){
+				if(!exports.isFirstRunForSchedule){
+					isAllowTorun=false;
+				}
+			}
+		}
+	if (isAllowTorun) {
     if (language === 'java') {
         var commandLineDriver = '';
         if (drivername === 'firefoxDriver') {
-            process.env['firefoxDriver'] = 'firefoxDriver';
-            commandLineDriver = ' -Dwebdriver.firefox.driver=' + chromePath;
-        } else {
-            commandLineDriver = ' -Dwebdriver.chrome.driver=' + chromePath;
-        }
+			const path = require('path');
+			process.env.PATH += path.delimiter + path.join(chromePath, '..');
+			console.log(">>>>PATH>>>>>" + path.join(chromePath, '..', 'geckodriver.exe'));
+			exports.path = path.join(chromePath, '..', 'geckodriver.exe');
+			exports.defaultInstance = require('child_process').execFile(exports.path);
+			commandLineDriver = ' -Dwebdriver.firefox.driver=' + chromePath;
+		} else {
+			const path = require('path');
+			process.env.PATH += path.delimiter + path.join(chromePath, '..');
+			exports.path = path.join(chromePath, '..', 'chromedriver.exe');
+			exports.defaultInstance = require('child_process').execFile(exports.path);
+			commandLineDriver = ' -Dwebdriver.chrome.driver=' + chromePath;
+		}
         var listOFCommands = ["mvn clean test", "mvn test", "mvn site", "mvn clean test & mvn site","mvn clean test : mvn site", "mvn clean test ; mvn site"];
         var result = listOFCommands.findIndex(item => cmdJavaScript.toLowerCase() === item.toLowerCase());
         if (result > -1) {
@@ -2190,6 +2239,10 @@ function executeCiCdComandJavaAndPython(path, chromePath, framework, language, d
             }
         }
     }
+    
+	exports.rundateTime = new Date().toLocaleString();
+}
+
 }
 
 function is_valid_date(value) {
@@ -2247,7 +2300,8 @@ function askingEndDateOfSchedular(hhmmDateString,cronString,path, chrmdriverPath
 						var duration = moment.duration(moment(enterDate).diff(new Date()));
 						var days = duration.asMilliseconds();
 						// console.log("Duration : " + Math.ceil(days));
-						exports.miliesecondDuration=Math.ceil(days);
+                        exports.miliesecondDuration=Math.ceil(days);
+                        exports.rundateTime = new Date().toLocaleString();
 						///
 						if (language === 'java' || language === 'python') {
 							exports.isFirstRunForSchedule = true;
@@ -2264,8 +2318,8 @@ function askingEndDateOfSchedular(hhmmDateString,cronString,path, chrmdriverPath
 								if (language === 'java' || language === 'python') {
 									if (framework !== 'junit' && language === 'java') {
 										loadPropertiesFromEachPath(path+ "/resources/", true, drivername, function (response) {
+    								    	executeCiCdComandJavaAndPython(path, chrmdriverPath, framework, language, drivername, cmd);
                                         });
-    									executeCiCdComandJavaAndPython(path, chrmdriverPath, framework, language, drivername, cmd);
                                         
 									}
 									if (framework === 'robot') {
@@ -2279,8 +2333,8 @@ function askingEndDateOfSchedular(hhmmDateString,cronString,path, chrmdriverPath
 								} else {
 									if (framework === 'cucumber') {
 										loadPropertiesFromEachPathTSJS(path + "/resources/", true, drivername, function (response) {
+                                           executeCiCdComandJSAndTS(path, framework, language, drivername, cmd);
                                         });
-                                        executeCiCdComandJSAndTS(path, framework, language, drivername, cmd);
 
 									}
 									if (framework === 'jasmine') {
@@ -2291,11 +2345,10 @@ function askingEndDateOfSchedular(hhmmDateString,cronString,path, chrmdriverPath
 											filenameWthLang = "/env.ts";
 										}
 										changeJasminProperties(path, true, drivername, filenameWthLang, function (response) {
+									    	executeCiCdComandJSAndTS(path, framework, language, drivername, cmd);
 										});
-										executeCiCdComandJSAndTS(path, framework, language, drivername, cmd);
                                     }
 								}
-								console.log("Execution is scheduled ,wait for next execution");
 
 							}, null, true, Intl.DateTimeFormat().resolvedOptions().timeZone);
 							/* setTimeout(() => { 
@@ -2367,7 +2420,7 @@ function changeJasminPropertiesRevert(path,filename) {
 			if (element === 'web') {
 				fs.writeFileSync(platformDir + filename, findStringBetween(filedata, "capabilities:", "onPrepare:","capabilities: { \n \t \t  browserName: 'chrome' \n \t }, \n\t onPrepare: "));
 			} else {
-				fs.writeFileSync(platformDir + filename, findStringBetween(filedata, "capabilities:", "onPrepare:","capabilities: { \n \t \t  browserName: 'chrome', \n \t \t 'chromeOptions':{'mobileEmulation':{'deviceName':'iPhone X'}} \n \t }, \n\t onPrepare:"));
+				fs.writeFileSync(platformDir + filename, findStringBetween(filedata, "capabilities:", "onPrepare:","capabilities: { \n \t \t  browserName: 'chrome', \n \t \t 'chromeOptions':{'mobileEmulation':{'deviceName':'iPhone X'}}\n \t }, \n\t onPrepare:"));
 			}
 		}
 	});
@@ -2462,7 +2515,7 @@ function changePythonBehavePropertiesRevert(path) {
 						str += i + '=' + key + '\n';
 					}
 					saveEnvFile(str, platformDir + "env.properties", function (fileRes) {
-						console.log(fileRes);
+						// console.log(fileRes);
 					});
 				}
 			});
