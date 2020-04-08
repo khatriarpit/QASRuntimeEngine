@@ -27,36 +27,16 @@ function exitHandler(options, exitCode) {
 			if(returnvalue === 'Yes'){
 				exports.forcefully=true;
 				if(exports.slanguage === "java" || exports.slanguage ==="python"){
-					if (exports.sframework == "robot") {
-                        changePythonRobotProperties(exports.spath, false, exports.sdrivername);
-                    }
-                    if (exports.sframework == "behave") {
-                        changePythonBehaveProperties(exports.spath, false, exports.sdrivername);
-                    }
-                    if (exports.slanguage === 'java' && exports.sframework !== "junit") {
-                        loadPropertiesFromEachPath(exports.spath + "/resources/", false, exports.sdrivername,function(response){
-                        });
-                    }
+                    revertModificationOfheadless(exports.sframework,exports.slanguage,exports.sdrivername);
 					process.exit();
 				}else{
-                    if (exports.sframework === "cucumber" && (exports.slanguage === 'typescript' || exports.slanguage === 'javascript')) {
-                        loadPropertiesFromEachPathTSJS(exports.spath + "/resources/", false, exports.sdrivername,function(response){
-                        });
-                    }
-                    if (exports.sframework === "jasmine") {
-                        var filenameWthLang = "";
-                        if (exports.slanguage === 'javascript') {
-                            filenameWthLang = "/env.js";
-                        } else {
-                            filenameWthLang = "/env.ts";
-                        }
-                        changeJasminProperties(exports.spath, false, exports.sdrivername, filenameWthLang, function (response) {
-                        });
-                    }
+                    revertJSTSModificationOfheadless(exports.sframework,exports.slanguage,exports.spath,exports.sdrivername);
 					process.exit();
 				}
 			}else{
-				console.log("Please wait for next execution.");
+                if (scheduleJob) {
+                    console.log("Please wait for next execution.");
+                } 
 			}
 		});
 	}
@@ -1659,36 +1639,6 @@ function getAdbVersion(callback) {
 exports.getAdbVersion = getAdbVersion;
 
     function  doYouWantToExit() {
-        scheduleJob = false;
-        if (exports.slanguage != undefined) {
-            if (exports.slanguage === "java" || exports.slanguage === "python") {
-                if (exports.sframework == "robot") {
-                    changePythonRobotProperties(exports.spath, false, exports.sdrivername);
-                }
-                if (exports.sframework == "behave") {
-                    changePythonBehaveProperties(exports.spath, false, exports.sdrivername);
-                }
-                if (exports.slanguage === 'java' && exports.sframework !== "junit") {
-                    loadPropertiesFromEachPath(exports.spath + "/resources/", false, exports.sdrivername, function (response) {
-                    });
-                }
-            } else {
-                if (exports.sframework === "cucumber" && (exports.slanguage === 'typescript' || exports.slanguage === 'javascript')) {
-                    loadPropertiesFromEachPathTSJS(exports.spath + "/resources/", false, exports.sdrivername, function (response) {
-                    });
-                }
-                if (exports.sframework === "jasmine") {
-                    var filenameWthLang = "";
-                    if (exports.slanguage === 'javascript') {
-                        filenameWthLang = "/env.js";
-                    } else {
-                        filenameWthLang = "/env.ts";
-                    }
-                    changeJasminProperties(exports.spath, false, exports.sdrivername, filenameWthLang, function (response) {
-                    });
-                }
-            }
-        }
 		process.title='QAS CLI';
 		console.log("");
 		console.log("");

@@ -32,7 +32,9 @@ function exitHandler(options, exitCode) {
 					process.exit();
 				}
 			}else{
-				console.log("Please wait for next execution.");
+                if (scheduleJob) {
+                    console.log("Please wait for next execution.");
+                } 
 			}
 		});
 	}
