@@ -38,13 +38,19 @@ function exitHandler(options, exitCode) {
 	}
 }
 function closeApplication(callback) {
+    var message="";
+	if(scheduleJob){
+		message="Do you want to stop scheduling?";
+	}else{
+		message="Do you want to process?";
+	}
 	var doYouWantToStop;
 	inquirer
 	.prompt([{
 		type: "list",
 		name: 'reptiles',
 		prefix: '>',
-		message: "Do you want to stop scheduling?",
+		message: message,
 		choices: ['Yes', 'No'],
 	}])
 	.then(answers => {
