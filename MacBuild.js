@@ -2650,7 +2650,6 @@ function driverManagement(driverpath, isSet) {
 // }, null, false);
 
 let run = () => {
-	console.log('function called'+new Date().toLocaleString());
 	exports.isFirstRunForSchedule=false;
 	scheduleJob = true;
 	// console.log("------------->>>>>>>>>Cron SetDIFFF :: "+exports.rundateTime);
