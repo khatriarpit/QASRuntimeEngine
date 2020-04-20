@@ -15,7 +15,12 @@ var scheduleJob=false;
 var isValidCommand=true;
 var isFirstRunForSchedule=false;
 const bt = require('big-time');
+var timeCron="0 */15 * * * *";
+const CronTime = require('cron').CronTime
 
+var job = new CronJob(timeCron, function () {
+	run() // function called inside cron
+});
 testings();
 require('events').EventEmitter.defaultMaxListeners = Infinity;
 
@@ -34,9 +39,19 @@ function exitHandler(options, exitCode) {
 					process.exit();
 				}
 			}else{
-                if (scheduleJob) {
-                    console.log("Please wait for next execution.");
-                } 
+				if (scheduleJob) {
+					console.log("Please wait for next execution.");
+				} else {
+					if (exports.scmdJavaScript != "" || exports.scmdJavaScript != undefined) {
+						if (exports.slanguage === "java" || exports.slanguage === "python") {
+							executeCiCdComandJavaAndPython(exports.spath, exports.schromePath, exports.sframework, exports.slanguage, exports.sdrivername,exports.scmdJavaScript);
+						} else {
+							executeCiCdComandJSAndTS(exports.spath, exports.sframework, exports.slanguage, exports.sdrivername,exports.scmdJavaScript);
+						}
+					}else{
+						testings();
+					}
+				}
 			}
 		});
 	}
@@ -46,7 +61,7 @@ function closeApplication(callback) {
 	if(scheduleJob){
 		message="Do you want to stop scheduling?";
 	}else{
-		message="Do you want to process?";
+		message="Do you want to stop process?";
 	}
 	var doYouWantToStop;
 	inquirer
@@ -55,7 +70,7 @@ function closeApplication(callback) {
 		name: 'reptiles',
 		prefix: '>',
 		message: message,
-		choices: ['Yes', 'No'],
+		choices: ['Yes', 'No']
 	}])
 	.then(answers => {
 		doYouWantToStop = answers.reptiles;
@@ -69,17 +84,28 @@ function closeApplication(callback) {
 }
 
 //do something when app is closing
-// process.on('exit', exitHandler.bind(null,{cleanup:true}));
+process.on('exit', exitHandler.bind(null,{cleanup:true}));
 //catches ctrl+c event
 process.on('SIGINT', exitHandler.bind(null, {exit:true}));
 // catches "kill pid" (for example: nodemon restart)
-// process.on('SIGUSR1', exitHandler.bind(null, {exit:true}));
-// process.on('SIGUSR2', exitHandler.bind(null, {exit:true}));
-//catches uncaught exceptions
+process.on('SIGUSR1', exitHandler.bind(null, {exit:true}));
+process.on('SIGUSR2', exitHandler.bind(null, {exit:true}));
+// //catches uncaught exceptions
 // process.on('uncaughtException', exitHandler.bind(null, {exit:true}));
-
+process.on('uncaughtException', function (err) {
+    if(exports.slanguage === "java" || exports.slanguage ==="python"){
+        revertModificationOfheadless(exports.sframework,exports.slanguage,exports.sdrivername);
+        // process.exit();
+    }else{
+        revertJSTSModificationOfheadless(exports.sframework,exports.slanguage,exports.spath,exports.sdrivername);
+        // process.exit();
+    }
+  })
 
 function testings() {
+    if(exports.driverPathSet !== undefined){
+		driverManagement(exports.driverPathSet,false);
+	}
     inquirer
         .prompt([{
             type: "list",
@@ -99,10 +125,38 @@ function testings() {
                 process.env['qasHeadlessMode'] = 'true';
                 process.title = 'QAS CLI';
                 if (inputProjectMode === 'Local system') {
+                    if (job!=undefined) {
+						job.stop();
+					}
+					 scheduleJob=false;
+					 exports.isFirstRunForSchedule=false;
+					 exports.isEndProgram=false;
+					 exports.miliesecondDuration=0;
+					exports.doEndProcess=undefined;
+					exports.spath = '';
+					exports.slanguage = '';
+					exports.sframework = '';
+					exports.sdrivername = '';
+					exports.schromePath = "";
+					exports.scmdJavaScript = '';
                     selectBrowser((returnvalue) => {
                         checkoutFromLocalRepository(returnvalue);
                     });
                 } else if (inputProjectMode === 'Version control') {
+                    if (job!=undefined) {
+						job.stop();
+					}
+					 scheduleJob=false;
+					 exports.isFirstRunForSchedule=false;
+					 exports.isEndProgram=false;
+					 exports.miliesecondDuration=0;
+					exports.doEndProcess=undefined;
+					exports.spath = '';
+					exports.slanguage = '';
+					exports.sframework = '';
+					exports.sdrivername = '';
+					exports.schromePath = "";
+					exports.scmdJavaScript = '';
                     selectBrowser((returnvalue) => {
                         gitCheckout(returnvalue);
                     });
@@ -211,6 +265,9 @@ function gitCheckoutWithInquer(cmdPerform, path,drivername) {
                 console.log("QAS CLI works only for web and mobile web frameworks.");
                 console.log('');
                 modificationPreviousChanges(exports.projectPath,language,framework);
+                exports.spath=exports.projectPath;
+                exports.slanguage = language;
+                exports.sframework = framework;
                 if (language !== undefined && language !== '' && language === 'java') {
                     // if (setDriver()) {
                         var isValid = true;
@@ -401,6 +458,9 @@ function checkoutFromLocalRepository(drivername) {
                     console.log("QAS CLI works only for web and mobile web frameworks.");
                     console.log('');
                     modificationPreviousChanges(path,language,framework);
+                    exports.spath=path;
+					exports.slanguage=language;
+					exports.sframework=framework;
                     if (language !== undefined && language !== '' && language === 'java') {
                         var isValid = true;
                         if (response['mvn'] === null || response['mvn'] === '' || response['mvn'] == 'undefined') {
@@ -590,6 +650,8 @@ function doJavaScriptExecution(path, framework, language,drivername) {
             driverPath = answers[statementForWebdriver];
             if (driverPath.trim() !== null && driverPath.trim() !== undefined && driverPath.trim() !== '') {
             var spawn_9 = require('child_process').spawn(driverPath.trim(), ['-version']);
+
+            if(spawn_9.stdout!== undefined){
             spawn_9.on('error', function (err) {
                 // console.log('Error  :'+err);
             });
@@ -613,6 +675,10 @@ function doJavaScriptExecution(path, framework, language,drivername) {
                       askForScheduling(path,driverPath,language,framework,drivername);
                 }
             });
+            } else {
+                console.log('Enter valid ' + drivername + ' path.');
+                doJavaScriptExecution(path, framework, language, drivername);
+            }
          }else {
                 doJavaScriptExecution(path, framework, language,drivername);
             }
@@ -670,11 +736,13 @@ function executionCommandJavaScritpTypescript(path, framework, language,driverna
         .then(answers => {
             cmdJavaScript = answers['Enter command for execution'];
             if (cmdJavaScript !== null && cmdJavaScript !== undefined && cmdJavaScript !== '') {
+                exports.scmdJavaScript=cmdJavaScript;
                 if (scheduleJob) {
                     exports.spath=path;
 					exports.slanguage=language;
 					exports.sframework=framework;
-					exports.sdrivername=drivername;
+                    exports.sdrivername=drivername;
+                    exports.schromePath="";
                     cronExecution(path, '', language, framework, drivername, cmdJavaScript);
                 } else {
                     exports.isFirstRunForSchedule=false;
@@ -714,6 +782,8 @@ function executionCommandJava(path,chromePath, framework, language,drivername) {
         .then(answers => {
             cmdJavaScript = answers['Enter command for execution'];
             if (cmdJavaScript !== null && cmdJavaScript !== undefined && cmdJavaScript !== '') {
+                exports.scmdJavaScript=cmdJavaScript;
+                exports.schromePath=chromePath;
                 if (scheduleJob) {
                     exports.spath=path;
 					exports.slanguage=language;
@@ -867,6 +937,7 @@ function changePythonBehaveProperties(path, isSave,drivername) {
         }
         }
     });
+    exports.isChanged=true;
 }
 
 function changePythonRobotProperties(path, isSave,drivername) {
@@ -915,6 +986,7 @@ function changePythonRobotProperties(path, isSave,drivername) {
             }
         }
     });
+    exports.isChanged=true;
 }
 function changeJasminProperties(path, isSave,drivername,filename,callback){
     var platforms = ['web', 'mobileweb'];
@@ -963,6 +1035,7 @@ function changeJasminProperties(path, isSave,drivername,filename,callback){
             doYouWantToExit();
         }
     });
+    exports.isChanged=true;
 }
 
 function loadPropertiesFromEachPathTSJS(path, isSave,drivername,callback) {
@@ -1033,6 +1106,7 @@ function loadPropertiesFromEachPathTSJS(path, isSave,drivername,callback) {
         }
     });
 });
+exports.isChanged=true;
 }
 function loadPropertiesFromEachPath(path, isSave,drivername,callback) {
     changeDriverVariableInApplicationProperties(path, drivername, isSave, function (response) {
@@ -1119,6 +1193,8 @@ function loadPropertiesFromEachPath(path, isSave,drivername,callback) {
         }
     });
 });
+
+exports.isChanged=true;
 }
 function saveEnvFile(content, fileToWrite, callback) {
     fs.existsSync(fileToWrite);
@@ -1714,9 +1790,6 @@ exports.getAdbVersion = getAdbVersion;
     }
     
     function doYouWantToExitWithOptions(path ,chromePath, framework, language,drivername) {
-        if(scheduleJob){
-            console.log("\n Execution is scheduled ,wait for next execution");
-        }
         var isNotValidSchedule = false;
         if (exports.isFirstRunForSchedule) {
             if (!exports.isValidCommand) {
@@ -1783,6 +1856,20 @@ exports.getAdbVersion = getAdbVersion;
                 }
             });
         }
+
+        if(scheduleJob && exports.isValidCommand && !exports.isEndProgram){
+            console.log("\n Execution is scheduled ,wait for next execution");
+        }
+        if(exports.doEndProcess !=undefined){
+            if(exports.doEndProcess){
+                scheduleJob = false;
+                job.stop();
+                exports.isFirstRunForSchedule = false;
+                console.log('Your scheduler stopped as per your end date.Explicity');
+                doYouWantToExit();
+                exports.isScheduleToStop = false;
+            }
+        }
     }
     
 
@@ -1846,7 +1933,8 @@ function askForScheduling(path, chrmdriverPath, language, framework, drivername)
             var input = answers.reptiles;
             if (input === 'Yes') {
                 console.log("Your script will be schedule based on " + Intl.DateTimeFormat().resolvedOptions().timeZone + " timezone .")
-                console.log("Your current datetime is " + new Date().toLocaleString());
+                console.log("Your current datetime is " + moment(new Date()).tz(Intl.DateTimeFormat().resolvedOptions().timeZone).format('YYYY-MM-DD HH:mm'));
+                exports.isScheduleToStop=true;
                 scheduleJob = true;
             }
             if (language === 'typescript' || language === 'javascript') {
@@ -1887,14 +1975,17 @@ function askForScheduling(path, chrmdriverPath, language, framework, drivername)
                             // console.log("zeprrr");
                             sHours = "*";
                         }
-                        var cronString = "*/" + sMinutes + " " + sHours + " * * *";
+                        var cronString = "0 */" + sMinutes + " " + sHours + " * * *";
                         // var cronString = "0 0/" + sMinutes + " 0/" + sHours;
                         // console.log("Execution is scheduled ,wait for next execution");
+                        timeCron=cronString;
                         askingEndDateOfSchedular(cronPattern,cronString,path, chrmdriverPath, language, framework, drivername, cmd);
                     } else {
                         cronExecution(path, chrmdriverPath, language, framework, drivername, cmd);
                     }
-                }
+                }else {
+					cronExecution(path, chrmdriverPath, language, framework, drivername, cmd);
+				}
             });
     
     }
@@ -1902,25 +1993,10 @@ function askForScheduling(path, chrmdriverPath, language, framework, drivername)
 
     
 function executeCiCdComandJSAndTS(path, framework, language, drivername, cmdJavaScript) {
-    	//Code Returning to prvernt executing twice during scheduling
-	var isAllowTorun=true;
-	if(scheduleJob){
-		// console.log(new Date()+" ++++++++++++ "+exports.rundateTime);
-		var difference = new Date().getTime() - new Date(exports.rundateTime).getTime() ; // This will give difference in milliseconds
-		var resultInMinutes = Math.ceil(difference / 60000);
-		// console.log(">>>>>>>>>>>>>>>:::::::::: "+resultInMinutes); 
-		// console.log("::::::::::::::::::: "+exports.timeUserChoose)
-		//check difference is lessthen actuall timing then return
-		if(resultInMinutes < exports.timeUserChoose){
-			if(!exports.isFirstRunForSchedule){
-				isAllowTorun=false;
-			}
-		}
-	}
-	if(isAllowTorun){
     if (cmdJavaScript.indexOf('npm') <= -1) {
         exports.isValidCommand=false;
         console.log(cmdJavaScript + ' command not found.');
+        exports.isChanged=false;
         revertJSTSModificationOfheadless(framework, language, path, drivername);
         doYouWantToExitWithOptions(path, '', framework, language, drivername);
     } else {
@@ -1930,18 +2006,22 @@ function executeCiCdComandJSAndTS(path, framework, language, drivername, cmdJava
                 revertJSTSModificationOfheadless(framework, language, path, drivername);
                 if (stdout.toString().indexOf('Cucumber HTML report ') >= 1) {
                     printReportPath(framework, path, (returnvalue) => {
+                        exports.isChanged=false;
                         doYouWantToExitWithOptions(path, '', framework, language, drivername);
                     });
                 } else if (stdout.toString().indexOf('Finished in ') >= 1) {
                     printReportPath(framework, path, (returnvalue) => {
+                        exports.isChanged=false;
                         doYouWantToExitWithOptions(path, '', framework, language, drivername);
                     });
                 } else {
+                    exports.isChanged=false;
                     doYouWantToExitWithOptions(path, '', framework, language, drivername);
                 }
             } else {
                 revertJSTSModificationOfheadless(framework, language, path, drivername);
                 printReportPath(framework, path, (returnvalue) => {
+                    exports.isChanged=false;
                     doYouWantToExitWithOptions(path, '', framework, language, drivername);
                 });
             }
@@ -1949,33 +2029,16 @@ function executeCiCdComandJSAndTS(path, framework, language, drivername, cmdJava
     }
     exports.rundateTime = new Date().toLocaleString();
 }
-}
 
 
 
 function executeCiCdComandJavaAndPython(path, chromePath, framework, language, drivername, cmdJavaScript) {
-    		//Code Returning to prvernt executing twice during scheduling
-	var isAllowTorun = true;
-	if (scheduleJob) {
-		// console.log(new Date() + " ++++++++++++ " + exports.rundateTime);
-		var difference = new Date().getTime() - new Date(exports.rundateTime).getTime(); // This will give difference in milliseconds
-		var resultInMinutes = Math.ceil(difference / 60000);
-		// console.log(">>>>>>>>>>>>>>>:::::::::: "+resultInMinutes); 
-			// console.log("::::::::::::::::::: "+exports.timeUserChoose)
-			//check difference is lessthen actuall timing then return
-			if(resultInMinutes < exports.timeUserChoose){
-				if(!exports.isFirstRunForSchedule){
-					isAllowTorun=false;
-				}
-			}
-		}
-	if (isAllowTorun) {
     if (language === 'java') {
         var commandLineDriver = '';
         if (drivername === 'firefoxDriver') {
 			const path = require('path');
 			process.env.PATH += path.delimiter + path.join(chromePath, '..');
-			console.log(">>>>PATH>>>>>" + path.join(chromePath, '..', 'geckodriver.exe'));
+			// console.log(">>>>PATH>>>>>" + path.join(chromePath, '..', 'geckodriver.exe'));
 			exports.path = path.join(chromePath, '..', 'geckodriver.exe');
 			exports.defaultInstance = require('child_process').execFile(exports.path);
 			commandLineDriver = ' -Dwebdriver.firefox.driver=' + chromePath;
@@ -1986,63 +2049,46 @@ function executeCiCdComandJavaAndPython(path, chromePath, framework, language, d
 			exports.defaultInstance = require('child_process').execFile(exports.path);
 			commandLineDriver = ' -Dwebdriver.chrome.driver=' + chromePath;
 		}
-        var listOFCommands = ["mvn clean test", "mvn test", "mvn site", "mvn clean test & mvn site","mvn clean test : mvn site", "mvn clean test ; mvn site"];
+        var listOFCommands = ["mvn clean test", "mvn test", "mvn site", "mvn clean test & mvn site","mvn test & mvn site", "mvn clean test ; mvn site"];
         var result = listOFCommands.findIndex(item => cmdJavaScript.toLowerCase() === item.toLowerCase());
         if (result > -1) {
             exports.isValidCommand=true;
             if (framework === 'junit') {
-                if (cmdJavaScript.toLowerCase().indexOf('test') > -1) {
+                var commandForExecution="";
+				if(cmdJavaScript.toLowerCase().indexOf('test') > -1  && cmdJavaScript.toLowerCase().indexOf('site') > -1){
+					commandForExecution='mvn  -Dtest=tests.web.*.*Test,tests.mobileweb.*.*Test -DfailIfNoTests=false' + commandLineDriver + " test & mvn  -Dtest=tests.web.*.*Test,tests.mobileweb.*.*Test -DfailIfNoTests=false " + commandLineDriver + " site" ;
+				}else if(cmdJavaScript.toLowerCase().indexOf('test') ){
+					commandForExecution='mvn  -Dtest=tests.web.*.*Test,tests.mobileweb.*.*Test -DfailIfNoTests=false' + commandLineDriver + " test";
+				}else if(cmdJavaScript.toLowerCase().indexOf('site') ){
+					commandForExecution='mvn  -Dtest=tests.web.*.*Test,tests.mobileweb.*.*Test -DfailIfNoTests=false ' + commandLineDriver + " site";
+				}else{
+				}
                     // console.log('mvn  -Dtest=tests.web.*.*Test,tests.mobileweb.*.*Test -Dwebdriver.chrome.driver=' + chromePath + " site");
-                    shell.exec('mvn  -Dtest=tests.web.*.*Test,tests.mobileweb.*.*Test -DfailIfNoTests=false ' + commandLineDriver + " test", function (code, stdout, stderr) {
+                    shell.exec(commandForExecution, function (code, stdout, stderr) {
                         if (stderr) {
                             revertModificationOfheadless(framework, language, drivername);
                             if (stderr.toString().indexOf('command not found') <= -1 && stdout.toString().indexOf('Tests run:') > -1) {
                                 printReportPath(framework, path, (returnvalue) => {
+                                    exports.isChanged=false;
                                     doYouWantToExitWithOptions(path, chromePath, framework, language, drivername);
                                 });
                             } else {
+                                exports.isChanged=false;
                                 doYouWantToExitWithOptions(path, chromePath, framework, language, drivername);
                             }
                         } else {
                             revertModificationOfheadless(framework, language, drivername);
                             if (stdout.toString().indexOf('Tests run:') > -1) {
                                 printReportPath(framework, path, (returnvalue) => {
+                                    exports.isChanged=false;
                                     doYouWantToExitWithOptions(path, chromePath, framework, language, drivername);
                                 });
                             } else {
+                                exports.isChanged=false;
                                 doYouWantToExitWithOptions(path, chromePath, framework, language, drivername);
                             }
                         }
                     });
-                } else if (cmdJavaScript.toLowerCase().indexOf('site') > -1) {
-                    // console.log('mvn  -Dtest=tests.web.*.*Test,tests.mobileweb.*.*Test -Dwebdriver.chrome.driver=' + chromePath + " site");
-                    shell.exec('mvn  -Dtest=tests.web.*.*Test,tests.mobileweb.*.*Test -DfailIfNoTests=false ' + commandLineDriver + " site", function (code, stdout, stderr) {
-                        if (stderr) {
-                            revertModificationOfheadless(framework, language, drivername);
-                            if (stderr.toString().indexOf('command not found') <= -1 && stdout.toString().indexOf('Tests run:') > -1) {
-                                printReportPath(framework, path, (returnvalue) => {
-                                    doYouWantToExitWithOptions(path, chromePath, framework, language, drivername);
-                                });
-                            } else {
-                                doYouWantToExitWithOptions(path, chromePath, framework, language, drivername);
-                            }
-                        } else {
-                            revertModificationOfheadless(framework, language, drivername);
-                            if (stdout.toString().indexOf('Tests run:') > -1) {
-                                printReportPath(framework, path, (returnvalue) => {
-                                    doYouWantToExitWithOptions(path, chromePath, framework, language, drivername);
-                                });
-                            } else {
-                                doYouWantToExitWithOptions(path, chromePath, framework, language, drivername);
-                            }
-                        }
-                    });
-                } else {
-                    exports.isValidCommand=false;
-                    console.log(cmdJavaScript + ' command not found.');
-                    revertModificationOfheadless(framework, language, drivername);
-                    doYouWantToExitWithOptions(path, chromePath, framework, language, drivername);
-                }
             } else {
                 	exports.isValidCommand=true;
                 shell.exec(cmdJavaScript + commandLineDriver, function (code, stdout, stderr) {
@@ -2050,18 +2096,22 @@ function executeCiCdComandJavaAndPython(path, chromePath, framework, language, d
                         revertModificationOfheadless(framework, language, drivername);
                         if (stderr.toString().indexOf('command not found') <= -1 && stdout.toString().indexOf('Tests run:') > -1) {
                             printReportPath(framework, path, (returnvalue) => {
+                                exports.isChanged=false;
                                 doYouWantToExitWithOptions(path, chromePath, framework, language, drivername);
                             });
                         } else {
+                            exports.isChanged=false;
                             doYouWantToExitWithOptions(path, chromePath, framework, language, drivername);
                         }
                     } else {
                         revertModificationOfheadless(framework, language, drivername);
                         if (stdout.toString().indexOf("BUILD SUCCESS") >= 1) {
                             printReportPath(framework, path, (returnvalue) => {
+                                exports.isChanged=false;
                                 doYouWantToExitWithOptions(path, chromePath, framework, language, drivername);
                             });
                         } else {
+                            exports.isChanged=false;
                             doYouWantToExitWithOptions(path, chromePath, framework, language, drivername);
                         }
                     }
@@ -2070,28 +2120,13 @@ function executeCiCdComandJavaAndPython(path, chromePath, framework, language, d
 
         } else {
             exports.isValidCommand=false;
+            exports.isChanged=false;
             console.log(cmdJavaScript + ' is not recognized as an internal or external command, \n operable program or batch file.');
             revertModificationOfheadless(framework, language, drivername);
             doYouWantToExitWithOptions(path, chromePath, framework, language, drivername);
         }
     } else {
-        // var existingPath = shell.exec("echo $PATH");
-     /*    if (drivername === 'firefoxDriver') {
-            shell.env["geckodriver"] = chromePath;
-        } else {
-            shell.env["chromedriver"] = chromePath;
-        } */
-        if (drivername === 'firefoxDriver') {
-			const path = require('path');
-			process.env.PATH += path.delimiter + path.join(chromePath, '..');
-			exports.path =  path.join(chromePath, '..', 'geckodriver')  ;
-			exports.defaultInstance = require('child_process').execFile(exports.path);
-		} else {
-			const path = require('path');
-			process.env.PATH += path.delimiter + path.join(chromePath, '..');
-			exports.path =  path.join(chromePath, '..', 'chromedriver')  ;
-			exports.defaultInstance = require('child_process').execFile(exports.path);
-		}
+        driverManagement(chromePath,true);
         if (framework === 'robot') {
             var upload = '';
             var isValidPythonCmd = false;
@@ -2110,6 +2145,7 @@ function executeCiCdComandJavaAndPython(path, chromePath, framework, language, d
             } else {
                 exports.isValidCommand=false;
                 console.log(cmdJavaScript + ' command not found.');
+                exports.isChanged=false;
                 revertModificationOfheadless(framework, language, drivername);
                 doYouWantToExitWithOptions(path, chromePath, framework, language, drivername);
             }
@@ -2132,6 +2168,7 @@ function executeCiCdComandJavaAndPython(path, chromePath, framework, language, d
                 }
                 if (!isMob && !isweb) {
                     console.log('No tests available to run .');
+                    exports.isChanged=false;
                     doYouWantToExitWithOptions(path, chromePath, framework, language);
                 } else {
                     var uris = '';
@@ -2149,14 +2186,17 @@ function executeCiCdComandJavaAndPython(path, chromePath, framework, language, d
                             revertModificationOfheadless(framework, language, drivername);
                             if ((stdout.toString().indexOf('report.html') >= 1) && (stdout.toString().indexOf('Report:  ' >= 1))) {
                                 printReportPath(framework, path, (returnvalue) => {
+                                    exports.isChanged=false;
                                     doYouWantToExitWithOptions(path, chromePath, framework, language, drivername);
                                 });
                             } else {
+                                exports.isChanged=false;
                                 doYouWantToExitWithOptions(path, chromePath, framework, language, drivername);
                             }
                         } else {
                             revertModificationOfheadless(framework, language, drivername);
                             printReportPath(framework, path, (returnvalue) => {
+                                exports.isChanged=false;
                                 doYouWantToExitWithOptions(path, chromePath, framework, language, drivername);
                             });
                         }
@@ -2167,6 +2207,7 @@ function executeCiCdComandJavaAndPython(path, chromePath, framework, language, d
             if (cmdJavaScript.indexOf('behave') <= -1) {
                 exports.isValidCommand=false;
                 console.log(cmdJavaScript + 'command not found.');
+                exports.isChanged=false;
                 revertModificationOfheadless(framework, language, drivername);
                 doYouWantToExitWithOptions(path, chromePath, framework, language, drivername);
             } else {
@@ -2176,18 +2217,22 @@ function executeCiCdComandJavaAndPython(path, chromePath, framework, language, d
                         revertModificationOfheadless(framework, language, drivername);
                         if (stdout.toString().indexOf('Took ') >= 1) {
                             printReportPath(framework, path, (returnvalue) => {
+                                exports.isChanged=false;
                                 doYouWantToExitWithOptions(path, chromePath, framework, language, drivername);
                             });
                         } else {
+                            exports.isChanged=false;
                             doYouWantToExitWithOptions(path, chromePath, framework, language, drivername);
                         }
                     } else {
                         revertModificationOfheadless(framework, language, drivername);
                         if (stdout.toString().indexOf('Took 0m0.000s') <= -1) {
                             printReportPath(framework, path, (returnvalue) => {
+                                exports.isChanged=false;
                                 doYouWantToExitWithOptions(path, chromePath, framework, language, drivername);
                             });
                         } else {
+                            exports.isChanged=false;
                             doYouWantToExitWithOptions(path, chromePath, framework, language, drivername);
                         }
                     }
@@ -2197,13 +2242,12 @@ function executeCiCdComandJavaAndPython(path, chromePath, framework, language, d
     }
     
 	exports.rundateTime = new Date().toLocaleString();
-}
 
 }
 
 function is_valid_date(value) {
     // capture all the parts 22-05-2013 11:23:22
-    var matches = value.match(/^(\d{4})\-(\d{2})\-(\d{2}) (\d{2}):(\d{2}):(\d{2})$/);
+    var matches = value.match(/^(\d{4})\-(\d{2})\-(\d{2}) (\d{2}):(\d{2})$/);
     if (matches === null) {
         return false;
     } else{
@@ -2213,14 +2257,14 @@ function is_valid_date(value) {
         var day = parseInt(matches[3], 10);
         var hour = parseInt(matches[4], 10);
         var minute = parseInt(matches[5], 10);
-        var second = parseInt(matches[6], 10);
-        var date = new Date(year, month, day, hour, minute, second);
+        // var second = parseInt(matches[6], 10);
+        var date = new Date(year, month, day, hour, minute);
         if (date.getFullYear() !== year
           || date.getMonth() != month
           || date.getDate() !== day
           || date.getHours() !== hour
           || date.getMinutes() !== minute
-          || date.getSeconds() !== second
+        //   || date.getSeconds() !== second
         ) {
            return false;
         } else {
@@ -2238,26 +2282,32 @@ function askingEndDateOfSchedular(hhmmDateString,cronString,path, chrmdriverPath
 	.prompt([{
 		type: "input",
 		prefix: '>',
-		name: "Enter end date of scheduling (YYYY-MM-DD HH:MM:SS)"
+		name: "Enter end date of scheduling (YYYY-MM-DD HH:MM)"
 	}])
 	.then(answers => {
-		dateTime = answers["Enter end date of scheduling (YYYY-MM-DD HH:MM:SS)"];
+        dateTime = answers["Enter end date of scheduling (YYYY-MM-DD HH:MM)"];
 			if (dateTime !== undefined && dateTime !== '' && dateTime !== null) {
 				var today = new Date();
 				today.setHours(today.getHours() + parseInt(hhmmDateString.split(":")[0]));
 				today.setMinutes(today.getMinutes() + parseInt(hhmmDateString.split(":")[1]));
 				if (is_valid_date(dateTime) ) {
+					var endDateChecking = new Date();
+					endDateChecking.setHours(endDateChecking.getHours() + 1);
+					// console.log("end:::::"+endDateChecking);
 					var enterDate = new Date(dateTime);
+					// console.log(moment(enterDate).tz(Intl.DateTimeFormat().resolvedOptions().timeZone).format('YYYY-MM-DD HH:mm'));
+					// console.log(moment(endDateChecking).tz(Intl.DateTimeFormat().resolvedOptions().timeZone).format('YYYY-MM-DD HH:mm'));
+					if (moment(enterDate).tz(Intl.DateTimeFormat().resolvedOptions().timeZone).format('YYYY-MM-DD HH:mm') > moment(endDateChecking).tz(Intl.DateTimeFormat().resolvedOptions().timeZone).format('YYYY-MM-DD HH:mm') ) {
 					// console.log("endDate :: "+enterDate);
 					// console.log("1 " +moment(today).tz(Intl.DateTimeFormat().resolvedOptions().timeZone).format('YYYY-MM-DD HH:mm:ss'));
 					// console.log("2 "+moment(moment(enterDate).tz(Intl.DateTimeFormat().resolvedOptions().timeZone).format('YYYY-MM-DD HH:mm:ss')).tz(Intl.DateTimeFormat().resolvedOptions().timeZone).format('YYYY-MM-DD HH:mm:ss'));
-					if (moment(today).tz(Intl.DateTimeFormat().resolvedOptions().timeZone).format('YYYY-MM-DD HH:mm:ss') < 
-							moment(moment(enterDate).tz(Intl.DateTimeFormat().resolvedOptions().timeZone).format('YYYY-MM-DD HH:mm:ss')).tz(Intl.DateTimeFormat().resolvedOptions().timeZone).format('YYYY-MM-DD HH:mm:ss')) {
+					if (moment(today).tz(Intl.DateTimeFormat().resolvedOptions().timeZone).format('YYYY-MM-DD HH:mm') < 
+							moment(moment(enterDate).tz(Intl.DateTimeFormat().resolvedOptions().timeZone).format('YYYY-MM-DD HH:mm')).tz(Intl.DateTimeFormat().resolvedOptions().timeZone).format('YYYY-MM-DD HH:mm')) {
 						var duration = moment.duration(moment(enterDate).diff(new Date()));
 						var days = duration.asMilliseconds();
-						// console.log("Duration : " + Math.ceil(days));
-                        exports.miliesecondDuration=Math.ceil(days);
-                        exports.rundateTime = new Date().toLocaleString();
+						exports.miliesecondDuration=Math.floor(days);
+						exports.rundateTime = new Date().toLocaleString();
+						// console.log("------------->>>>>>>>>SET:: "+exports.rundateTime);
 						///
 						if (language === 'java' || language === 'python') {
 							exports.isFirstRunForSchedule = true;
@@ -2266,47 +2316,48 @@ function askingEndDateOfSchedular(hhmmDateString,cronString,path, chrmdriverPath
 							exports.isFirstRunForSchedule = true;
 							executeCiCdComandJSAndTS(path, framework, language, drivername, cmd);
 						}
-						console.log("Please wait for next execution.");
 						if (exports.isValidCommand) {
-							const a =new CronJob(cronString, function () {
-								exports.isFirstRunForSchedule = false;
-								scheduleJob = true;
-								if (language === 'java' || language === 'python') {
-									if (framework !== 'junit' && language === 'java') {
-										loadPropertiesFromEachPath(path+ "/resources/", true, drivername, function (response) {
-    								    	executeCiCdComandJavaAndPython(path, chrmdriverPath, framework, language, drivername, cmd);
-                                        });
+                            changeTime(cronString); 
+							job.start();
+							//const a =new CronJob(cronString, function () {
+							// 	exports.isFirstRunForSchedule = false;
+							// 	scheduleJob = true;
+							// 	if (language === 'java' || language === 'python') {
+							// 		if (framework !== 'junit' && language === 'java') {
+							// 			loadPropertiesFromEachPath(path+ "/resources/", true, drivername, function (response) {
+    						// 		    	executeCiCdComandJavaAndPython(path, chrmdriverPath, framework, language, drivername, cmd);
+                            //             });
                                         
-									}
-									if (framework === 'robot') {
-                                        changePythonRobotProperties(path, true, drivername);
-                                        executeCiCdComandJavaAndPython(path, chrmdriverPath, framework, language, drivername, cmd);
-									}
-									if (framework === 'behave') {
-                                        changePythonBehaveProperties(path, true, drivername);
-                                        executeCiCdComandJavaAndPython(path, chrmdriverPath, framework, language, drivername, cmd);
-									}
-								} else {
-									if (framework === 'cucumber') {
-										loadPropertiesFromEachPathTSJS(path + "/resources/", true, drivername, function (response) {
-                                           executeCiCdComandJSAndTS(path, framework, language, drivername, cmd);
-                                        });
+							// 		}
+							// 		if (framework === 'robot') {
+                            //             changePythonRobotProperties(path, true, drivername);
+                            //             executeCiCdComandJavaAndPython(path, chrmdriverPath, framework, language, drivername, cmd);
+							// 		}
+							// 		if (framework === 'behave') {
+                            //             changePythonBehaveProperties(path, true, drivername);
+                            //             executeCiCdComandJavaAndPython(path, chrmdriverPath, framework, language, drivername, cmd);
+							// 		}
+							// 	} else {
+							// 		if (framework === 'cucumber') {
+							// 			loadPropertiesFromEachPathTSJS(path + "/resources/", true, drivername, function (response) {
+                            //                executeCiCdComandJSAndTS(path, framework, language, drivername, cmd);
+                            //             });
 
-									}
-									if (framework === 'jasmine') {
-										var filenameWthLang = "";
-										if (language === 'javascript') {
-											filenameWthLang = "/env.js";
-										} else {
-											filenameWthLang = "/env.ts";
-										}
-										changeJasminProperties(path, true, drivername, filenameWthLang, function (response) {
-									    	executeCiCdComandJSAndTS(path, framework, language, drivername, cmd);
-										});
-                                    }
-								}
+							// 		}
+							// 		if (framework === 'jasmine') {
+							// 			var filenameWthLang = "";
+							// 			if (language === 'javascript') {
+							// 				filenameWthLang = "/env.js";
+							// 			} else {
+							// 				filenameWthLang = "/env.ts";
+							// 			}
+							// 			changeJasminProperties(path, true, drivername, filenameWthLang, function (response) {
+							// 		    	executeCiCdComandJSAndTS(path, framework, language, drivername, cmd);
+							// 			});
+                            //         }
+							// 	}
 
-							}, null, true, Intl.DateTimeFormat().resolvedOptions().timeZone);
+							// }, null, true, Intl.DateTimeFormat().resolvedOptions().timeZone);
 							/* setTimeout(() => { 
 								 a.stop();
 								console.log('scheduler stopped');
@@ -2316,7 +2367,11 @@ function askingEndDateOfSchedular(hhmmDateString,cronString,path, chrmdriverPath
 					} else {
 						console.log("End date should be greater then current schedule date");
 						askingEndDateOfSchedular(hhmmDateString,cronString,path, chrmdriverPath, language, framework, drivername, cmd);
-					}
+                    }
+                } else {
+					console.log("End date time should have after 1 hour from now.");
+					askingEndDateOfSchedular(hhmmDateString,cronString,path, chrmdriverPath, language, framework, drivername, cmd);
+				}
 				} else {
 					console.log("Enter valid datetime.");
 					askingEndDateOfSchedular(hhmmDateString,cronString,path, chrmdriverPath, language, framework, drivername, cmd);
@@ -2329,9 +2384,20 @@ function askingEndDateOfSchedular(hhmmDateString,cronString,path, chrmdriverPath
 		});
 }
 let schedulerStop = (a) => {
-    a.stop();
-	console.log('Your scheduler stopped as per your end date.');
-	doYouWantToExit();
+	if(scheduleJob){
+	if (exports.isScheduleToStop && !exports.isChanged) {
+		scheduleJob = false;
+		job.stop();
+		exports.isFirstRunForSchedule = false;
+		console.log('Your scheduler stopped as per your end date.');
+		doYouWantToExit();
+		exports.isScheduleToStop = false;
+		exports.miliesecondDuration=0;
+	}else{
+		exports.doEndProcess=true;
+		//setTimeout(() => { schedulerStop() }, 60000);
+	}
+}
 }
 function validateTime(obj) {
 	var timeValue = obj;
@@ -2354,6 +2420,10 @@ function validateTime(obj) {
 
 		if (sMinutes == "" || isNaN(sMinutes) || parseInt(sMinutes) > 59) {
 			console.log("Enter valid time.");
+			return false;
+        }
+        if (parseInt(sHours) ==0 && (sMinutes == "" || isNaN(sMinutes) || parseInt(sMinutes) < 15)) {
+			console.log("Execution schedule time difference shoud at least 00:15");
 			return false;
 		}
 		else if (parseInt(sMinutes) == 0)
@@ -2569,4 +2639,86 @@ function loadPropertiesFromEachPathRevert(path) {
 		});
 	
 	});
+}
+
+
+
+
+function driverManagement(driverpath, isSet) {
+	const path = require('path');
+	if (isSet) {
+		exports.driverPathSet=driverpath;
+		process.env.PATH += path.delimiter + path.join(driverpath, '..');
+		shell.env["PATH"] = process.env.PATH;
+	} else {
+		var a=process.env.PATH;
+		a = a.split(path.delimiter + path.join(driverpath, '..')).join("");;
+		shell.env["PATH"] = a;
+	}
+}
+
+
+
+
+//  job = new CronJob(exports.cronString, function () {
+//     run() // function called inside cron
+// }, null, false);
+
+let run = () => {
+	// console.log('function called'+new Date().toLocaleString());
+	exports.isFirstRunForSchedule=false;
+	scheduleJob = true;
+	// console.log("------------->>>>>>>>>Cron SetDIFFF :: "+exports.rundateTime);
+	var difference = new Date().getTime() - new Date(exports.rundateTime).getTime(); // This will give difference in milliseconds
+	var resultInMinutes = Math.ceil(difference / 60000);
+	// console.log("------------->>>>>>>>>DIFFF :: "+resultInMinutes);
+	if (resultInMinutes > 3) {
+		// if (resultInMinutes >= exports.timeUserChoose) {
+	if (exports.slanguage === 'java' || exports.slanguage === 'python') {
+		if (exports.slanguage === 'java') {
+			if(exports.sframework === 'junit'){
+				exports.isChanged=true;
+				executeCiCdComandJavaAndPython(exports.spath, exports.schromePath, exports.sframework, exports.slanguage, exports.sdrivername,exports.scmdJavaScript);
+				// executeCiCdComandJavaAndPython(exports.spath, exports.cchrmdriverPath, exports.sframework, exports.slanguage, drivername, cmd);
+			}else{
+			loadPropertiesFromEachPath(exports.spath+ "/resources/", true, exports.sdrivername, function (response) {
+				executeCiCdComandJavaAndPython(exports.spath, exports.schromePath, exports.sframework, exports.slanguage, exports.sdrivername,exports.scmdJavaScript);
+				// executeCiCdComandJavaAndPython(path, chrmdriverPath, exports.sframework, exports.slanguage, drivername, cmd);
+			});
+		}
+	}
+		if (exports.sframework === 'robot') {
+			changePythonRobotProperties(exports.spath, true, exports.sdrivername);
+			executeCiCdComandJavaAndPython(exports.spath, exports.schromePath, exports.sframework, exports.slanguage, exports.sdrivername,exports.scmdJavaScript);
+		}
+		if (exports.sframework === 'behave') {
+			changePythonBehaveProperties(exports.spath, true, exports.sdrivername);
+			executeCiCdComandJavaAndPython(exports.spath, exports.schromePath, exports.sframework, exports.slanguage, exports.sdrivername,exports.scmdJavaScript);
+		}
+	} else {
+		if (exports.sframework === 'cucumber') {
+			loadPropertiesFromEachPathTSJS(exports.spath + "/resources/", true, exports.sdrivername, function (response) {
+			executeCiCdComandJSAndTS(exports.spath, exports.sframework, exports.slanguage, exports.sdrivername,exports.scmdJavaScript);
+
+			});
+			// executeCiCdComandJSAndTS(path, exports.sframework, exports.slanguage, drivername, cmd);
+		}
+		if (exports.sframework === 'jasmine') {
+			var filenameWthLang = "";
+			if (exports.slanguage === 'javascript') {
+				filenameWthLang = "/env.js";
+			} else {
+				filenameWthLang = "/env.ts";
+			}
+			changeJasminProperties(exports.spath, true, exports.sdrivername, filenameWthLang, function (response) {
+			executeCiCdComandJSAndTS(exports.spath, exports.sframework, exports.slanguage, exports.sdrivername,exports.scmdJavaScript);
+			});
+		}
+	}
+}
+}
+
+
+let changeTime = (input) => {
+    job.setTime(new CronTime(input));
 }
