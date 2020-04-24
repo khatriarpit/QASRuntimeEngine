@@ -281,7 +281,7 @@ function gitCheckoutWithInquer(cmdPerform, path,drivername) {
                     }
                     if (isValid) {
                         if (framework === 'junit') {
-                            process.env["driverDetails"] =drivername;
+                            process.env[drivername] =drivername;
                             checkJunitReadmeFile(exports.projectPath, function a(response) {
                                 if (response) {
                                     doJavaScriptExecution(exports.projectPath, framework, language,drivername);
@@ -472,7 +472,7 @@ function checkoutFromLocalRepository(drivername) {
                         }
                         if (isValid) {
                             if (framework === 'junit') {
-                                process.env["driverDetails"] =drivername;
+                                process.env[drivername] =drivername;
                                 checkJunitReadmeFile(path, function a(response) {
                                     if (response) {
                                         doJavaScriptExecution(path, framework, language,drivername);
@@ -644,6 +644,7 @@ function doJavaScriptExecution(path, framework, language,drivername) {
         .then(answers => {
             driverPath = answers[statementForWebdriver];
             if (driverPath.trim() !== null && driverPath.trim() !== undefined && driverPath.trim() !== '') {
+                driverPath = driverPath.trim().replace(/\\/g, "");
                 var spawn_9 = require('child_process').spawn(driverPath.trim(), ['-version']);
                 spawn_9.on('error', function (err) {
                     // console.log('Error  :'+err);
@@ -1788,7 +1789,7 @@ function validateTime(obj) {
             return false;
         }
         if (parseInt(sHours) ==0 && (sMinutes == "" || isNaN(sMinutes) || parseInt(sMinutes) < 15)) {
-			console.log("Execution schedule time difference shoud at least 00:15");
+			console.log("Execution schedule time difference should at least 00:15");
 			return false;
 		}
         else if (parseInt(sMinutes) == 0)
@@ -1923,7 +1924,7 @@ function doYouWantToExitWithOptions(path, chromePath, framework, language, drive
 			scheduleJob = false;
 			job.stop();
 			exports.isFirstRunForSchedule = false;
-			console.log('Your scheduler stopped as per your end date.Explicity');
+			console.log('Your scheduler stopped as per your end date.');
 			doYouWantToExit();
 			exports.isScheduleToStop = false;
 		}
@@ -2019,20 +2020,7 @@ function executeCiCdComandJSAndTS(path, framework, language, drivername, cmdJava
 function executeCiCdComandJavaAndPython(path, chromePath, framework, language, drivername, cmdJavaScript) {
     		//Code Returning to prvernt executing twice during scheduling
     if (language === 'java') {
-        var commandLineDriver = '';
-        if (drivername === 'firefoxDriver') {
-			const path = require('path');
-			process.env.PATH += path.delimiter + path.join(chromePath, '..');
-			exports.path = path.join(chromePath, '..', 'geckodriver.exe');
-			exports.defaultInstance = require('child_process').execFile(exports.path);
-			commandLineDriver = ' -Dwebdriver.firefox.driver=' + chromePath;
-		} else {
-			const path = require('path');
-			process.env.PATH += path.delimiter + path.join(chromePath, '..');
-			exports.path = path.join(chromePath, '..', 'chromedriver.exe');
-			exports.defaultInstance = require('child_process').execFile(exports.path);
-			commandLineDriver = ' -Dwebdriver.chrome.driver=' + chromePath;
-		}
+        var commandLineDriver = ' -Dwebdriver.firefox.driver=' + chromePath;
         var listOFCommands = ["mvn clean test", "mvn test", "mvn site", "mvn clean test & mvn site","mvn test & mvn site", "mvn clean test : mvn site"];
         var result = listOFCommands.findIndex(item => cmdJavaScript.toLowerCase() === item.toLowerCase());
         if (result > -1) {
@@ -2633,14 +2621,15 @@ function driverManagement(driverpath, isSet) {
 	const path = require('path');
 	if (isSet) {
 		exports.driverPathSet=driverpath;
-		process.env.PATH += path.delimiter + path.join(driverpath, '..');
-		shell.env["PATH"] = process.env.PATH;
+		var env=path.join(driverpath, '..') +path.delimiter+ process.env.PATH;
+		shell.env["PATH"] =env;
 	} else {
 		var a=process.env.PATH;
-		a = a.split(path.delimiter + path.join(driverpath, '..')).join("");;
+		a = a.split( path.join(driverpath, '..')+path.delimiter).join("");;
 		shell.env["PATH"] = a;
 	}
 }
+
 
 
 
