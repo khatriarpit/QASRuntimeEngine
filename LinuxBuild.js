@@ -17,7 +17,8 @@ var isFirstRunForSchedule=false;
 const bt = require('big-time');
 const CronTime = require('cron').CronTime
 var job ="";
-
+var crypto = require('crypto');
+var projectKey ="";
 
 testings();
 require('events').EventEmitter.defaultMaxListeners = Infinity;
@@ -135,7 +136,8 @@ function testings() {
 					exports.sframework = '';
 					exports.sdrivername = '';
 					exports.schromePath = "";
-					exports.scmdJavaScript = '';
+                    exports.scmdJavaScript = '';
+                    projectKey="";
                     selectBrowser((returnvalue) => {
                         checkoutFromLocalRepository(returnvalue);
                     });
@@ -153,7 +155,8 @@ function testings() {
 					exports.sframework = '';
 					exports.sdrivername = '';
 					exports.schromePath = "";
-					exports.scmdJavaScript = '';
+                    exports.scmdJavaScript = '';
+                    projectKey="";
                     selectBrowser((returnvalue) => {
                         gitCheckout(returnvalue);
                     });
@@ -259,7 +262,14 @@ function gitCheckoutWithInquer(cmdPerform, path,drivername) {
                 var oldProjectData = oldProjectConfiguration.projectTypes;
                 var language = oldProjectConfiguration.language;
                 var framework = oldProjectConfiguration.framework;
-                console.log("QAS CLI works only for web and mobile web frameworks.");
+                projectKey = oldProjectConfiguration.key;
+                if (projectKey !== undefined || projectKey !== '') {
+                    console.log("QAS CLI works only for web and mobile web frameworks.");
+                    var endDate=decryptLicensekey(projectKey);
+                    // console.log('Today:: ' + moment(new Date()).tz(Intl.DateTimeFormat().resolvedOptions().timeZone).format('YYYY-MM-DD HH:mm'));
+                    // console.log('End Date : ' + moment(moment(endDate).tz(Intl.DateTimeFormat().resolvedOptions().timeZone).format('YYYY-MM-DD HH:mm')).tz(Intl.DateTimeFormat().resolvedOptions().timeZone).format('YYYY-MM-DD HH:mm'));
+                    if (moment(new Date()).tz(Intl.DateTimeFormat().resolvedOptions().timeZone).format('YYYY-MM-DD HH:mm') <
+                        moment(moment(endDate).tz(Intl.DateTimeFormat().resolvedOptions().timeZone).format('YYYY-MM-DD HH:mm')).tz(Intl.DateTimeFormat().resolvedOptions().timeZone).format('YYYY-MM-DD HH:mm')) {
                 console.log('');
                 modificationPreviousChanges(exports.projectPath,language,framework);
                 exports.spath=exports.projectPath;
@@ -424,6 +434,14 @@ function gitCheckoutWithInquer(cmdPerform, path,drivername) {
                     console.log("Invalid QAS project in given path.");
                     gitCheckout(drivername);
                 }
+            }else{
+				console.log("Your License is expired . please renew your license and update project from QAS.");
+				checkoutFromLocalRepository(drivername);
+			}
+			}else{
+				console.log("Something wrong in your project configuration ,please update your project by reimport in QAS");
+				checkoutFromLocalRepository(drivername);
+			}
             } else {
                 console.log("It is not valid QAS project")
             }
@@ -452,7 +470,14 @@ function checkoutFromLocalRepository(drivername) {
                     var oldProjectData = oldProjectConfiguration.projectTypes;
                     var language = oldProjectConfiguration.language;
                     var framework = oldProjectConfiguration.framework;
-                    console.log("QAS CLI works only for web and mobile web frameworks.");
+                    projectKey = oldProjectConfiguration.key;
+					if (projectKey !== undefined || projectKey !== '') {
+						console.log("QAS CLI works only for web and mobile web frameworks.");
+						var endDate=decryptLicensekey(projectKey);
+						// console.log('Today:: ' + moment(new Date()).tz(Intl.DateTimeFormat().resolvedOptions().timeZone).format('YYYY-MM-DD HH:mm'));
+						// console.log('End Date : ' + moment(moment(endDate).tz(Intl.DateTimeFormat().resolvedOptions().timeZone).format('YYYY-MM-DD HH:mm')).tz(Intl.DateTimeFormat().resolvedOptions().timeZone).format('YYYY-MM-DD HH:mm'));
+						if (moment(new Date()).tz(Intl.DateTimeFormat().resolvedOptions().timeZone).format('YYYY-MM-DD HH:mm') <
+							moment(moment(endDate).tz(Intl.DateTimeFormat().resolvedOptions().timeZone).format('YYYY-MM-DD HH:mm')).tz(Intl.DateTimeFormat().resolvedOptions().timeZone).format('YYYY-MM-DD HH:mm')) {
                     console.log('');
                     modificationPreviousChanges(path,language,framework);
                     exports.spath=path;
@@ -622,6 +647,14 @@ function checkoutFromLocalRepository(drivername) {
                         console.log("It is not valid  QAS project");
                         checkoutFromLocalRepository(drivername);
                     }
+                }else{
+					console.log("Your License is expired . please renew your license and update project from QAS");
+					checkoutFromLocalRepository(drivername);
+				}
+				}else{
+					console.log("Something wrong in your project configuration ,please update your project by reimport in QAS");
+					checkoutFromLocalRepository(drivername);
+				}
                 } else {
                     console.log("QAS CLI can\'t find the path specified.");
                     checkoutFromLocalRepository(drivername);
@@ -2299,6 +2332,10 @@ function askingEndDateOfSchedular(hhmmDateString,cronString,path, chrmdriverPath
 					// console.log("2 "+moment(moment(enterDate).tz(Intl.DateTimeFormat().resolvedOptions().timeZone).format('YYYY-MM-DD HH:mm:ss')).tz(Intl.DateTimeFormat().resolvedOptions().timeZone).format('YYYY-MM-DD HH:mm:ss'));
 					if (moment(today).tz(Intl.DateTimeFormat().resolvedOptions().timeZone).format('YYYY-MM-DD HH:mm') < 
 							moment(moment(enterDate).tz(Intl.DateTimeFormat().resolvedOptions().timeZone).format('YYYY-MM-DD HH:mm')).tz(Intl.DateTimeFormat().resolvedOptions().timeZone).format('YYYY-MM-DD HH:mm')) {
+                        //check for licensedate
+						var endDate=decryptLicensekey(projectKey);
+						if (moment(enterDate).tz(Intl.DateTimeFormat().resolvedOptions().timeZone).format('YYYY-MM-DD HH:mm') < 
+							moment(moment(endDate).tz(Intl.DateTimeFormat().resolvedOptions().timeZone).format('YYYY-MM-DD HH:mm')).tz(Intl.DateTimeFormat().resolvedOptions().timeZone).format('YYYY-MM-DD HH:mm')) {
 						var duration = moment.duration(moment(enterDate).diff(new Date()));
 						var days = duration.asMilliseconds();
 						exports.miliesecondDuration=Math.floor(days);
@@ -2317,7 +2354,11 @@ function askingEndDateOfSchedular(hhmmDateString,cronString,path, chrmdriverPath
 							var mls=(+timeParts[0] * (60000 * 60)) + (+timeParts[1] * 60000);
 							job=setInterval(() => run(), mls);
                             bt.setTimeout(() => { schedulerStop() }, exports.miliesecondDuration);
-						}
+                        }
+                    }else{
+						console.log("Schedule end date is should be smaller then your license expired date(" +moment(endDate).tz(Intl.DateTimeFormat().resolvedOptions().timeZone).format('YYYY-MM-DD HH:mm')+")");
+						askingEndDateOfSchedular(hhmmDateString,cronString,path, chrmdriverPath, language, framework, drivername, cmd);
+					}
 					} else {
 						console.log("End date should be greater then current schedule date");
 						askingEndDateOfSchedular(hhmmDateString,cronString,path, chrmdriverPath, language, framework, drivername, cmd);
@@ -2679,4 +2720,14 @@ let run = () => {
 let changeTime = (input) => {
     job.setTime(new CronTime(input));
     // console.log("Updated :JOB");
+}
+function decryptLicensekey(projectKey){
+	var cryptkey = crypto.createHash('sha256').update('Nixnogen').digest();
+	var iv = 'a2xhcgAAAAAAAAAA';
+	var projectKey = Buffer.from(projectKey, 'base64').toString('binary');
+	var decipher = crypto.createDecipheriv('aes-256-cbc', cryptkey, iv),
+		decoded = decipher.update(projectKey, 'binary', 'utf8');
+	decoded += decipher.final('utf8');
+	var endDate = new Date(JSON.parse(decoded).license_end_date);
+	return endDate;
 }
