@@ -260,9 +260,10 @@ function gitCheckoutWithInquer(cmdPerform, path,drivername) {
                 var language = oldProjectConfiguration.language;
                 var framework = oldProjectConfiguration.framework;
                 projectKey = oldProjectConfiguration.key;
-                if (projectKey !== undefined || projectKey !== '') {
+                if (projectKey !== undefined && projectKey !== '') {
                     console.log("QAS CLI works only for web and mobile web frameworks.");
                     var endDate=decryptLicensekey(projectKey);
+                    if(endDate!==""){
                     // console.log('Today:: ' + moment(new Date()).tz(Intl.DateTimeFormat().resolvedOptions().timeZone).format('YYYY-MM-DD HH:mm'));
                     // console.log('End Date : ' + moment(moment(endDate).tz(Intl.DateTimeFormat().resolvedOptions().timeZone).format('YYYY-MM-DD HH:mm')).tz(Intl.DateTimeFormat().resolvedOptions().timeZone).format('YYYY-MM-DD HH:mm'));
                     if (moment(new Date()).tz(Intl.DateTimeFormat().resolvedOptions().timeZone).format('YYYY-MM-DD HH:mm') <
@@ -432,11 +433,15 @@ function gitCheckoutWithInquer(cmdPerform, path,drivername) {
                 }
             }else{
 				console.log("Your License is expired . please renew your license and update project from QAS.");
-				checkoutFromLocalRepository(drivername);
-			}
+				gitCheckout(drivername);
+            }
+            }else{
+                console.log("Something wrong in your license configuration ,please update your project by reimport in QAS");
+                gitCheckout(drivername);
+            }
 			}else{
 				console.log("Something wrong in your project configuration ,please update your project by reimport in QAS");
-				checkoutFromLocalRepository(drivername);
+				gitCheckout(drivername);
 			}
             } else {
                 console.log("It is not valid QAS project")
@@ -466,9 +471,10 @@ function checkoutFromLocalRepository(drivername) {
                     var language = oldProjectConfiguration.language;
                     var framework = oldProjectConfiguration.framework;
                     projectKey = oldProjectConfiguration.key;
-					if (projectKey !== undefined || projectKey !== '') {
+					if (projectKey !== undefined && projectKey !== '') {
 						console.log("QAS CLI works only for web and mobile web frameworks.");
-						var endDate=decryptLicensekey(projectKey);
+                        var endDate=decryptLicensekey(projectKey);
+                        if(endDate !== ""){
 						// console.log('Today:: ' + moment(new Date()).tz(Intl.DateTimeFormat().resolvedOptions().timeZone).format('YYYY-MM-DD HH:mm'));
 						// console.log('End Date : ' + moment(moment(endDate).tz(Intl.DateTimeFormat().resolvedOptions().timeZone).format('YYYY-MM-DD HH:mm')).tz(Intl.DateTimeFormat().resolvedOptions().timeZone).format('YYYY-MM-DD HH:mm'));
 						if (moment(new Date()).tz(Intl.DateTimeFormat().resolvedOptions().timeZone).format('YYYY-MM-DD HH:mm') <
@@ -642,7 +648,11 @@ function checkoutFromLocalRepository(drivername) {
                 }else{
 					console.log("Your License is expired . please renew your license and update project from QAS");
 					checkoutFromLocalRepository(drivername);
-				}
+                }
+                }else{
+                    console.log("Something wrong in your license configuration ,please update your project by reimport in QAS");
+                    checkoutFromLocalRepository(drivername);
+                }
 				}else{
 					console.log("Something wrong in your project configuration ,please update your project by reimport in QAS");
 					checkoutFromLocalRepository(drivername);
@@ -2691,12 +2701,17 @@ let run = () => {
 }
 
 function decryptLicensekey(projectKey){
-	var cryptkey = crypto.createHash('sha256').update('Nixnogen').digest();
-	var iv = 'a2xhcgAAAAAAAAAA';
-	var projectKey = Buffer.from(projectKey, 'base64').toString('binary');
-	var decipher = crypto.createDecipheriv('aes-256-cbc', cryptkey, iv),
-		decoded = decipher.update(projectKey, 'binary', 'utf8');
-	decoded += decipher.final('utf8');
-	var endDate = new Date(JSON.parse(decoded).license_end_date);
-	return endDate;
+    try {
+        var cryptkey = crypto.createHash('sha256').update('Nixnogen').digest();
+        var iv = 'a2xhcgAAAAAAAAAA';
+        var projectKey = Buffer.from(projectKey, 'base64').toString('binary');
+        var decipher = crypto.createDecipheriv('aes-256-cbc', cryptkey, iv),
+            decoded = decipher.update(projectKey, 'binary', 'utf8');
+        decoded += decipher.final('utf8');
+        var endDate = new Date(JSON.parse(decoded).license_end_date);
+        return endDate;
+    } catch (err) {
+        // console.log('Error '+err);
+        return '';
+    }
 }
