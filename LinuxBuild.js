@@ -269,8 +269,8 @@ function gitCheckoutWithInquer(cmdPerform, path,drivername) {
                     if(endDate !== ""){
                     // console.log('Today:: ' + moment(new Date()).tz(Intl.DateTimeFormat().resolvedOptions().timeZone).format('YYYY-MM-DD HH:mm'));
                     // console.log('End Date : ' + moment(moment(endDate).tz(Intl.DateTimeFormat().resolvedOptions().timeZone).format('YYYY-MM-DD HH:mm')).tz(Intl.DateTimeFormat().resolvedOptions().timeZone).format('YYYY-MM-DD HH:mm'));
-                    if (moment(new Date()).tz(Intl.DateTimeFormat().resolvedOptions().timeZone).format('YYYY-MM-DD HH:mm') <
-                        moment(moment(endDate).tz(Intl.DateTimeFormat().resolvedOptions().timeZone).format('YYYY-MM-DD HH:mm')).tz(Intl.DateTimeFormat().resolvedOptions().timeZone).format('YYYY-MM-DD HH:mm')) {
+                    if (moment(new Date()).tz(Intl.DateTimeFormat().resolvedOptions().timeZone).format('YYYY-MM-DD') <
+                        moment(moment(endDate).tz(Intl.DateTimeFormat().resolvedOptions().timeZone).format('YYYY-MM-DD')).tz(Intl.DateTimeFormat().resolvedOptions().timeZone).format('YYYY-MM-DD')) {
                 console.log('');
                 modificationPreviousChanges(exports.projectPath,language,framework);
                 exports.spath=exports.projectPath;
@@ -482,8 +482,8 @@ function checkoutFromLocalRepository(drivername) {
                         if(endDate !==""){
 						// console.log('Today:: ' + moment(new Date()).tz(Intl.DateTimeFormat().resolvedOptions().timeZone).format('YYYY-MM-DD HH:mm'));
 						// console.log('End Date : ' + moment(moment(endDate).tz(Intl.DateTimeFormat().resolvedOptions().timeZone).format('YYYY-MM-DD HH:mm')).tz(Intl.DateTimeFormat().resolvedOptions().timeZone).format('YYYY-MM-DD HH:mm'));
-						if (moment(new Date()).tz(Intl.DateTimeFormat().resolvedOptions().timeZone).format('YYYY-MM-DD HH:mm') <
-							moment(moment(endDate).tz(Intl.DateTimeFormat().resolvedOptions().timeZone).format('YYYY-MM-DD HH:mm')).tz(Intl.DateTimeFormat().resolvedOptions().timeZone).format('YYYY-MM-DD HH:mm')) {
+						if (moment(new Date()).tz(Intl.DateTimeFormat().resolvedOptions().timeZone).format('YYYY-MM-DD') <
+							moment(moment(endDate).tz(Intl.DateTimeFormat().resolvedOptions().timeZone).format('YYYY-MM-DD')).tz(Intl.DateTimeFormat().resolvedOptions().timeZone).format('YYYY-MM-DD')) {
                     console.log('');
                     modificationPreviousChanges(path,language,framework);
                     exports.spath=path;
@@ -2344,8 +2344,8 @@ function askingEndDateOfSchedular(hhmmDateString,cronString,path, chrmdriverPath
 							moment(moment(enterDate).tz(Intl.DateTimeFormat().resolvedOptions().timeZone).format('YYYY-MM-DD HH:mm')).tz(Intl.DateTimeFormat().resolvedOptions().timeZone).format('YYYY-MM-DD HH:mm')) {
                         //check for licensedate
 						var endDate=decryptLicensekey(projectKey);
-						if (moment(enterDate).tz(Intl.DateTimeFormat().resolvedOptions().timeZone).format('YYYY-MM-DD HH:mm') < 
-							moment(moment(endDate).tz(Intl.DateTimeFormat().resolvedOptions().timeZone).format('YYYY-MM-DD HH:mm')).tz(Intl.DateTimeFormat().resolvedOptions().timeZone).format('YYYY-MM-DD HH:mm')) {
+						if (moment(enterDate).tz(Intl.DateTimeFormat().resolvedOptions().timeZone).format('YYYY-MM-DD') < 
+							moment(moment(endDate).tz(Intl.DateTimeFormat().resolvedOptions().timeZone).format('YYYY-MM-DD')).tz(Intl.DateTimeFormat().resolvedOptions().timeZone).format('YYYY-MM-DD')) {
 						var duration = moment.duration(moment(enterDate).diff(new Date()));
 						var days = duration.asMilliseconds();
 						exports.miliesecondDuration=Math.floor(days);
@@ -2740,6 +2740,7 @@ function decryptLicensekey(projectKey){
             decoded = decipher.update(projectKey, 'binary', 'utf8');
         decoded += decipher.final('utf8');
         var endDate = new Date(JSON.parse(decoded).license_end_date);
+        endDate.setDate(endDate.getDate() + 1);
         return endDate;
     } catch (err) {
         // console.log('Error '+err);
