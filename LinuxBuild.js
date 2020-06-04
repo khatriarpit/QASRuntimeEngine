@@ -269,8 +269,7 @@ function gitCheckoutWithInquer(cmdPerform, path,drivername) {
                     if(endDate !== ""){
                     // console.log('Today:: ' + moment(new Date()).tz(Intl.DateTimeFormat().resolvedOptions().timeZone).format('YYYY-MM-DD HH:mm'));
                     // console.log('End Date : ' + moment(moment(endDate).tz(Intl.DateTimeFormat().resolvedOptions().timeZone).format('YYYY-MM-DD HH:mm')).tz(Intl.DateTimeFormat().resolvedOptions().timeZone).format('YYYY-MM-DD HH:mm'));
-                    if (moment(new Date()).tz(Intl.DateTimeFormat().resolvedOptions().timeZone).format('YYYY-MM-DD') <
-                        moment(moment(endDate).tz(Intl.DateTimeFormat().resolvedOptions().timeZone).format('YYYY-MM-DD')).tz(Intl.DateTimeFormat().resolvedOptions().timeZone).format('YYYY-MM-DD')) {
+                    if(moment.utc(new Date()).format( "YYYY-MM-DD HH:MM") < moment.utc(endDate).format( "YYYY-MM-DD HH:MM")){
                 console.log('');
                 modificationPreviousChanges(exports.projectPath,language,framework);
                 exports.spath=exports.projectPath;
@@ -332,8 +331,28 @@ function gitCheckoutWithInquer(cmdPerform, path,drivername) {
                     }
                     if (isValid) {
                         if (framework === 'robot') {
-                            changePythonRobotProperties(exports.projectPath, true,drivername);
-                            executePythonExtraCommand(exports.projectPath, framework, language,drivername);
+                            var robotWeburl = path + "/tests/web";
+                            var robotMobUrl = path + "/tests/mobileweb";
+                            if (checkDirectorySync(robotWeburl)) {
+                                isweb = true;
+                            }
+                            if (checkDirectorySync(robotMobUrl)) {
+                                isMob = true;
+                            }
+                            if (isMob && isweb) {
+                                checkPythonTagExist(path+"/tests/", function a(response) {
+                                    if (!response ) {
+                                            console.log("QAS CLI requires to update your project using QAS import project menu.");
+                                            doYouWantToExit();
+                                    }else{
+                                        changePythonRobotProperties(exports.projectPath, true,drivername);
+                                        executePythonExtraCommand(exports.projectPath, framework, language,drivername);
+                                    }
+                                });
+                            }else{
+                                console.log('No tests available to run .');
+                                doYouWantToExit();
+                            }
                         } else {
                             if (checkEnviornmentDriverName(exports.projectPath, drivername, framework)) {
                                 if (checkExistingPlatform(exports.projectPath)) {
@@ -482,8 +501,7 @@ function checkoutFromLocalRepository(drivername) {
                         if(endDate !==""){
 						// console.log('Today:: ' + moment(new Date()).tz(Intl.DateTimeFormat().resolvedOptions().timeZone).format('YYYY-MM-DD HH:mm'));
 						// console.log('End Date : ' + moment(moment(endDate).tz(Intl.DateTimeFormat().resolvedOptions().timeZone).format('YYYY-MM-DD HH:mm')).tz(Intl.DateTimeFormat().resolvedOptions().timeZone).format('YYYY-MM-DD HH:mm'));
-						if (moment(new Date()).tz(Intl.DateTimeFormat().resolvedOptions().timeZone).format('YYYY-MM-DD') <
-							moment(moment(endDate).tz(Intl.DateTimeFormat().resolvedOptions().timeZone).format('YYYY-MM-DD')).tz(Intl.DateTimeFormat().resolvedOptions().timeZone).format('YYYY-MM-DD')) {
+						if(moment.utc(new Date()).format( "YYYY-MM-DD HH:MM") < moment.utc(endDate).format( "YYYY-MM-DD HH:MM")){
                     console.log('');
                     modificationPreviousChanges(path,language,framework);
                     exports.spath=path;
@@ -543,9 +561,29 @@ function checkoutFromLocalRepository(drivername) {
                         }
                         if (isValid) {
                             if (framework === 'robot') {
-                                changePythonRobotProperties(path, true,drivername);
-                                executePythonExtraCommand(path, framework, language,drivername);
-                                // doJavaScriptExecution(path, framework, language);
+								// checkPythonInstalled(exports.projectPath);
+								var robotWeburl = path + "/tests/web";
+								var robotMobUrl = path + "/tests/mobileweb";
+								if (checkDirectorySync(robotWeburl)) {
+									isweb = true;
+								}
+								if (checkDirectorySync(robotMobUrl)) {
+									isMob = true;
+								}
+								if (isMob && isweb) {
+									checkPythonTagExist(path+"/tests/", function a(response) {
+										if (!response ) {
+												console.log("QAS CLI requires to update your project using QAS import project menu.");
+												doYouWantToExit();
+										}else{
+                                            changePythonRobotProperties(path, true,drivername);
+                                            executePythonExtraCommand(path, framework, language,drivername);
+										}
+									});
+								}else{
+									console.log('No tests available to run .');
+									doYouWantToExit();
+								}
                             } else {
                                 if (checkEnviornmentDriverName(exports.projectPath, drivername, framework)) {
                                     if (checkExistingPlatform(path)) {
@@ -2210,17 +2248,7 @@ function executeCiCdComandJavaAndPython(path, chromePath, framework, language, d
                     exports.isChanged=false;
                     doYouWantToExitWithOptions(path, chromePath, framework, language);
                 } else {
-                    var uris = '';
-                    if (robotMobUrl !== '' && robotWeburl !== '') {
-                        uris = "robot " + upload + " \"" + robotMobUrl + '\"  \"' + robotWeburl + '\"';
-                    }
-                    if (robotMobUrl !== '' && robotWeburl == '') {
-                        uris = "robot " + upload + " \"" + robotMobUrl + '\"';
-                    }
-                    if (robotMobUrl === '' && robotWeburl !== '') {
-                        uris = "robot " + upload + " \"" + robotWeburl + '\"';
-                    }
-                    shell.exec(uris, function (code, stdout, stderr) {
+                    shell.exec("robot " + upload + ' --include=webmobile tests', function (code, stdout, stderr) {
                         if (stderr) {
                             revertModificationOfheadless(framework, language, drivername);
                             if ((stdout.toString().indexOf('report.html') >= 1) && (stdout.toString().indexOf('Report:  ' >= 1))) {
@@ -2344,8 +2372,7 @@ function askingEndDateOfSchedular(hhmmDateString,cronString,path, chrmdriverPath
 							moment(moment(enterDate).tz(Intl.DateTimeFormat().resolvedOptions().timeZone).format('YYYY-MM-DD HH:mm')).tz(Intl.DateTimeFormat().resolvedOptions().timeZone).format('YYYY-MM-DD HH:mm')) {
                         //check for licensedate
 						var endDate=decryptLicensekey(projectKey);
-						if (moment(enterDate).tz(Intl.DateTimeFormat().resolvedOptions().timeZone).format('YYYY-MM-DD') < 
-							moment(moment(endDate).tz(Intl.DateTimeFormat().resolvedOptions().timeZone).format('YYYY-MM-DD')).tz(Intl.DateTimeFormat().resolvedOptions().timeZone).format('YYYY-MM-DD')) {
+                        if(moment.utc(enterDate).format( "YYYY-MM-DD HH:MM") < moment.utc(endDate).format( "YYYY-MM-DD HH:MM")){
 						var duration = moment.duration(moment(enterDate).diff(new Date()));
 						var days = duration.asMilliseconds();
 						exports.miliesecondDuration=Math.floor(days);
@@ -2741,9 +2768,67 @@ function decryptLicensekey(projectKey){
         decoded += decipher.final('utf8');
         var endDate = new Date(JSON.parse(decoded).license_end_date);
         endDate.setDate(endDate.getDate() + 1);
+        endDate.setHours(endDate.getHours() + parseInt(12));
         return endDate;
     } catch (err) {
         // console.log('Error '+err);
         return '';
     }
 }
+
+function checkPythonTagExist(path1,callback){
+    filewalker(path1, function(err, data){
+        if(err){
+            throw err;
+		}
+        checkRobotTestCaseDtls(data, function a(response) {
+            callback(response);
+        });
+    });
+}
+function checkRobotTestCaseDtls(path, callback) {
+    for (var i = 0; i < path.length; i++) {
+        const filedata = fs.readFileSync(path[i], 'utf8');
+        if (filedata.indexOf('Force Tags  webmobile') < 0) {
+            callback(false);
+        } else {
+            if (i == path.length-1) {
+                callback(true);
+            }
+        }
+    }
+}
+
+function filewalker(dir, done) {
+    let results = [];
+    fs.readdir(dir, function(err, list) {
+        if (err) return done(err);
+
+        var pending = list.length;
+
+        if (!pending) return done(null, results);
+
+        list.forEach(function(file){
+            file = pathObject.resolve(dir, file);
+
+            fs.stat(file, function(err, stat){
+                // If directory, execute a recursive call
+                if (stat && stat.isDirectory()) {
+                    // Add directory to array [comment if you need to remove the directories from the array]
+                    // results.push(file);
+
+                    filewalker(file, function(err, res){
+                        results = results.concat(res);
+                        if (!--pending) done(null, results);
+                    });
+                } else {
+					if(file.toString().indexOf('\\tests\\web\\') >0 || file.toString().indexOf("\\tests\\mobileweb\\")>0 
+					 || file.toString().indexOf('/tests/web') >0 || file.toString().indexOf("/tests/mobileweb")>0){
+                       results.push(file);
+                    }
+                    if (!--pending) done(null, results);
+                }
+            });
+        });
+    });
+};
