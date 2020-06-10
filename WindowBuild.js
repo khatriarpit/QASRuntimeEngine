@@ -16,6 +16,14 @@ var isFirstRunForSchedule=false;
 var crypto = require('crypto');
 var job="";
 var projectKey ="";
+const { getChromeVersion } = require('@testim/chrome-version');
+const os = require('os');
+const arch = os.arch();
+const homedir = os.homedir();
+const https = require('https');
+const decompress = require('decompress');
+const request = require('request');
+const httpR = require('follow-redirects').https;
 testings();
 
 require('events').EventEmitter.defaultMaxListeners = Infinity;
@@ -324,15 +332,15 @@ function gitCheckoutWithInquer(cmdPerform, path,drivername) {
 				}
 				if(isValid){
 					if (framework === 'robot') {
-						var robotWeburl = path + "/tests/web";
-						var robotMobUrl = path + "/tests/mobileweb";
-						if (checkDirectorySync(robotWeburl)) {
-							isweb = true;
-						}
-						if (checkDirectorySync(robotMobUrl)) {
-							isMob = true;
-						}
-						if (isMob && isweb) {
+						// var robotWeburl = path + "/tests/web";
+						// var robotMobUrl = path + "/tests/mobileweb";
+						// if (checkDirectorySync(robotWeburl)) {
+						// 	isweb = true;
+						// }
+						// if (checkDirectorySync(robotMobUrl)) {
+						// 	isMob = true;
+						// }
+						// if (isMob && isweb) {
 							checkPythonTagExist(path+"/tests/", function a(response) {
 								if (!response ) {
 										console.log("QAS CLI requires to update your project using QAS import project menu.");
@@ -342,10 +350,10 @@ function gitCheckoutWithInquer(cmdPerform, path,drivername) {
 									executePythonExtraCommand(exports.projectPath,framework,language,drivername);
 								}
 							});
-						}else{
-							console.log('No tests available to run .');
-							doYouWantToExit();
-						}
+						// }else{
+						// 	console.log('No tests available to run .');
+						// 	doYouWantToExit();
+						// }
 				} else {
 					if(checkEnviornmentDriverName(exports.projectPath,drivername,framework)){
 							if(checkExistingPlatform(exports.projectPath)){
@@ -550,16 +558,6 @@ function checkoutFromLocalRepository(drivername) {
 						}
 						if(isValid){
 							if (framework === 'robot') {
-								// checkPythonInstalled(exports.projectPath);
-								var robotWeburl = path + "/tests/web";
-								var robotMobUrl = path + "/tests/mobileweb";
-								if (checkDirectorySync(robotWeburl)) {
-									isweb = true;
-								}
-								if (checkDirectorySync(robotMobUrl)) {
-									isMob = true;
-								}
-								if (isMob && isweb) {
 									checkPythonTagExist(path+"/tests/", function a(response) {
 										if (!response ) {
 												console.log("QAS CLI requires to update your project using QAS import project menu.");
@@ -569,10 +567,6 @@ function checkoutFromLocalRepository(drivername) {
 											executePythonExtraCommand(path,framework,language,drivername);
 										}
 									});
-								}else{
-									console.log('No tests available to run .');
-									doYouWantToExit();
-								}
 								// doJavaScriptExecution(path, framework, language);
 							} else {
 							if(checkEnviornmentDriverName(exports.projectPath,drivername,framework)){
@@ -703,8 +697,8 @@ function checkoutFromLocalRepository(drivername) {
 }
 
 function doJavaScriptExecution(path, framework, language,drivername) {
-	process.chdir(path);
-	var statementForWebdriver = 'Enter ' + drivername + ' exe path';
+	//Here we can set path of default driver ...
+	/* var statementForWebdriver = 'Enter ' + drivername + ' exe path';
 	var driverPath = '';
 	inquirer
 		.prompt([{
@@ -743,7 +737,117 @@ function doJavaScriptExecution(path, framework, language,drivername) {
 			} else {
 				doJavaScriptExecution(path, framework, language, drivername);
 			}
-		});
+		}); */
+
+		if(drivername === 'firefoxDriver'){
+			var cPath = homedir + '/geckodriver.exe';
+			if (!fs.existsSync(cPath)) {
+			  updateGeckodriver(process.platform,function a(res){
+				  if (res) {
+					  process.chdir(path);
+					  askForScheduling(path, cPath, language, framework, drivername);
+				  } else {
+					  doYouWantToExit();
+				  }
+			  });
+			} else {
+			  var spawn_9 = require('child_process').spawn(cPath, ['--version']);
+			  spawn_9.on('error', function (err) {
+				// console.log('Error  :'+err);
+			  });
+			  var result = '';
+			  spawn_9.stdout.on('data', function (data) {
+				result = result + data.toString();
+			  });
+			  spawn_9.stderr.on('data', function (data) {
+				result = result + data.toString();
+			  });
+			  spawn_9.on('close', function (data) {
+				if (result.toString().toLowerCase().indexOf('geckodriver') !== -1) {
+				  console.log('Your current driver version :: ' + result.toString().split(" ")[1]);
+				  getCurrentGeckodriverVersion(function (resp) {
+					if (resp === '') {
+						console.log("You can not update driver because firefox binary installed in your system..");
+						doYouWantToExit();
+					} else {
+					  console.log('Compitable Driver Version :: ' + resp)
+					  if (parseFloat(result.toString().split(" ")[1]) === parseFloat(resp)) {
+						console.log("Your Driver match with latest Compitable driver.");
+						process.chdir(path);
+						askForScheduling(path,cPath,language,framework,drivername);
+					  } else {
+						console.log("Your Driver Not match with latest Compitable driver,\n updating Please wait..");
+						updateGeckodriver(process.platform,function a(res){
+							if (res) {
+								process.chdir(path);
+								askForScheduling(path, cPath, language, framework, drivername);
+							} else {
+								doYouWantToExit();
+							}
+						});
+					  }
+					}
+				  });
+				} else {
+					updateGeckodriver(process.platform,function a(res){
+						if (res) {
+							process.chdir(path);
+							askForScheduling(path, cPath, language, framework, drivername);
+						} else {
+							doYouWantToExit();
+						}
+					});
+				}
+			  });
+			}
+		}else{
+			// code for chromedriver path and udpate.
+			// driverMangement.updateChromedriver(os.platform)
+			// askForScheduling(path,driverPath,language,framework,drivername);
+			var cPath = homedir + '/chromedriver.exe';
+			if (!fs.existsSync(cPath)) {
+				updateChromedriver(process.platform,function a(re){
+					process.chdir(path);
+					askForScheduling(path, cPath, language, framework, drivername);
+				})
+			  } else {
+				var spawn_9 = require('child_process').spawn(cPath, ['--version']);
+				spawn_9.on('error', function (err) {
+				  // console.log('Error  :'+err);
+				});
+				var result = '';
+				spawn_9.stdout.on('data', function (data) {
+				  result = result + data.toString();
+				});
+				spawn_9.stderr.on('data', function (data) {
+				  result = result + data.toString();
+				});
+				spawn_9.on('close', function (data) {
+				  if (result.toString().toLowerCase().indexOf('chromedriver') !== -1) {
+					console.log('Your current driver version :: ' + result.toString().split(" ")[1]);
+					getCurrentChromedriverVersion(function (resp) {
+					  console.log('Compitable Driver Version :: ' + resp)
+					  if (parseFloat(result.toString().split(" ")[1]) === parseFloat(resp)) {
+						console.log("Your Driver match with latest compitable driver.");
+						process.chdir(path);
+						askForScheduling(path, cPath, language, framework, drivername);
+					  } else {
+						console.log("Your Driver Not match with latest Compitable driver,\n updating Please wait..");
+						updateChromedriver(process.platform,function a(re){
+							process.chdir(path);
+							askForScheduling(path, cPath, language, framework, drivername);
+						})
+					  }
+					});
+				  } else {
+					updateChromedriver(process.platform,function a(re){
+						process.chdir(path);
+						askForScheduling(path, cPath, language, framework, drivername);
+					})
+				  }
+				});
+			  }
+		}
 }
 
 function executeExtraCommand(path, framework, language,drivername) {
@@ -2120,26 +2224,26 @@ function executeCiCdComandJavaAndPython(path, chromePath, framework, language, d
 			}
 			if (isValidPythonCmd) {
 				exports.isValidCommand=true;
-				var isweb = false;
-				var isMob = false;
-				var robotWeburl = path + "/tests/web";
-				var robotMobUrl = path + "/tests/mobileweb";
-				if (checkDirectorySync(path + "/tests/web")) {
-					isweb = true;
+				// var isweb = false;
+				// var isMob = false;
+				// var robotWeburl = path + "/tests/web";
+				// var robotMobUrl = path + "/tests/mobileweb";
+				// if (checkDirectorySync(path + "/tests/web")) {
+				// 	isweb = true;
 
-				} else {
-					robotWeburl = '';
-				}
-				if (checkDirectorySync(path + "/tests/mobileweb")) {
-					isMob = true;
-				} else {
-					robotMobUrl = '';
-				}
-				if (!isMob && !isweb) {
-					console.log('No tests available to run .');
-					exports.isChanged=false;
-					doYouWantToExitWithOptions(path, chromePath, framework, language);
-				} else {
+				// } else {
+				// 	robotWeburl = '';
+				// }
+				// if (checkDirectorySync(path + "/tests/mobileweb")) {
+				// 	isMob = true;
+				// } else {
+				// 	robotMobUrl = '';
+				// }
+				// if (!isMob && !isweb) {
+				// 	console.log('No tests available to run .');
+				// 	exports.isChanged=false;
+				// 	doYouWantToExitWithOptions(path, chromePath, framework, language);
+				// } else {
 					shell.exec("robot " + upload + ' --include=webmobile tests', function (code, stdout, stderr) {
 						if (stderr) {
 							revertModificationOfheadless(framework, language, drivername);
@@ -2163,7 +2267,7 @@ function executeCiCdComandJavaAndPython(path, chromePath, framework, language, d
 							});
 						}
 					});
-				}
+				// }
 			}
 		} else {
 			if (cmdJavaScript.indexOf('behave') <= -1) {
@@ -2721,4 +2825,303 @@ function filewalker(dir, done) {
             });
         });
     });
-};
+}
+
+function getCurrentChromedriverVersion(callback) {
+	getChromeVersion()
+	  .then((res) => {
+		let chromeMainVersion = res.split('.')[0];
+		// console.log('Your Current Chrome Version :: ' + res);
+		getChromeDriverVersion(chromeMainVersion, function a(googleChromeVersion) {
+		  // console.log('Compitable Chrome Version :: ' + googleChromeVersion.body.trim());
+		  callback(googleChromeVersion.body.trim());
+		});
+	  });
+  }
+  
+  function getChromeDriverVersion(chromeMainVersion, callback) {
+	// console.log('APi to call' + 'https://chromedriver.storage.googleapis.com/LATEST_RELEASE_' + chromeMainVersion);
+	let options = {
+	  'method': 'GET',
+	  'url': 'https://chromedriver.storage.googleapis.com/LATEST_RELEASE_' + chromeMainVersion,
+	  'headers': {
+	  }
+	};
+	request(options, function (error, response) {
+	  callback(response);
+	});
+  }
+
+  function updateChromedriver(platform,callback) {
+	let totalBytes;
+	let fileName = '';
+	let url;
+	if (platform === 'win32') {
+	  fileName = 'chromedriver_win32.zip';
+	} else if (platform === 'darwin') {
+	  fileName = 'chromedriver_mac64.zip';
+	} else {
+	  fileName = 'chromedriver_linux64.zip';
+	}
+  
+	let req;
+	request('https://www.google.com', function (err) {
+	  if (err) {
+		console.log('Your internet connection is not active.');
+		callback(false);
+	  } else {
+		getChromeVersion()
+		  .then((res) => {
+			let chromeMainVersion = res.split('.')[0];
+			console.log('Your Current Chrome Version :: ' + res);
+			getChromeDriverVersion(chromeMainVersion, function a(googleChromeVersion) {
+			  console.log('Compitable Chrome Version :: ' + googleChromeVersion.body.trim());
+			  url = 'https://chromedriver.storage.googleapis.com/' + googleChromeVersion.body.trim() + '/' + fileName;
+			  //We have to give download directory
+			  // let downloadFolder = path.parse(chromePath + '').dir;
+			  let downloadFolder = homedir;
+			  console.log("URL to Download :: " + url + '\nDownload directory :: ' + `${downloadFolder}`);
+			  const file = fs.createWriteStream(`${downloadFolder}/${fileName}`);
+			  return new Promise(resolve => {
+				let receivedBytes = 0;
+				let previuosPercent = 0;
+				req = https.get(url, (response) => {
+				  if (response.statusCode !== 200) {
+					console.log('Response status was ', response);
+					console.log('Broken link : ' + url);
+					callback(false);
+				  }
+				  totalBytes = response.headers['content-length'];
+				  response.on('data', (chunk) => {
+					receivedBytes += chunk.length;
+					const percent = ((receivedBytes / totalBytes) * 100);
+					let message = 'updating chromedriver....';
+					if ((percent - previuosPercent) > 10 || percent === 100) {
+					  if (percent === 100) {
+						if (os.type().includes('Windows')) {
+						  decompress(downloadFolder + '\\' + fileName, downloadFolder).then(files => {
+							exec('del /f ' + downloadFolder + '\\' + fileName);
+							console.log('\nQAS Chrome driver updated successfully');
+							callback(true);
+						  });
+						} else {
+						  decompress(downloadFolder + '/' + fileName, downloadFolder).then(files => {
+							exec('rm -rf ' + downloadFolder + '/' + fileName);
+							console.log('\nQAS Chrome driver updated successfully');
+							callback(true);
+						  });
+  
+						}
+					  } else {
+						message = 'updating....';
+					  }
+					  previuosPercent = percent;
+					}
+				  });
+				  response.pipe(file);
+				  response.on('error', (err) => {
+					fs.unlink(`${downloadFolder}/${fileName}`, (err) => {
+					  if (err) {
+						throw err;
+					  }
+					  console.log('Inside Download : successfully deleted file');
+					  resolve();
+					});
+				  });
+				  file.on('finish', () => {
+					file.close();
+					resolve();
+				  });
+				  file.on('error', (err) => {
+					fs.unlink(`${downloadFolder}/${fileName}`, (err) => {
+					  if (err) {
+						throw err;
+					  }
+					  console.log('Inside File Write :  successfully deleted file');
+					  resolve();
+					});
+  
+				  });
+				});
+			  });
+			});
+		  });
+	  }
+	});
+  }
+  function getCurrentGeckodriverVersion(callback) {
+	getFirefoxVersionDTL(function a(res) {
+	  if (res !== '') {
+		let firefoxMainVersion = parseInt(res);
+		getFirefoxDriverVersion(firefoxMainVersion, function a(getFirefoxVersion) {
+		  callback(getFirefoxVersion.trim());
+		});
+	  } else {
+		callback('');
+	  }
+	});
+  }
+  function getFirefoxVersionDTL(callback) {
+	if (os.type().includes('Windows')) {
+	  if (fs.existsSync('C:\\Program Files\\Mozilla Firefox')) {
+		process.chdir('C:\\Program Files\\Mozilla Firefox');
+		const cmd = 'firefox -v|more';
+		exec(cmd, function (error, stdout, stderr) {
+		  let firefoxVersion = stdout;
+		  firefoxVersion = firefoxVersion.replace('Mozilla Firefox ', '');
+		  if (error) {
+			console.log(error);
+		  }
+		  if (stderr) {
+			console.log(stderr);
+		  }
+		  callback(firefoxVersion);
+		});
+	  } else {
+		console.log('Mozila firefox not found in your system');
+		callback('');
+	  }
+  
+	} else if (os.type().includes('Darwin')) {
+	  const cmd = '/Applications/Firefox.app/Contents/MacOS/firefox --version';
+	  exec(cmd, function (error, stdout, stderr) {
+		if (error) {
+		  console.log(error);
+		}
+		if (stderr) {
+		  console.log(stderr);
+		}
+		let firefoxVersion = stdout;
+		firefoxVersion = firefoxVersion.replace('Mozilla Firefox ', '');
+		callback(firefoxVersion);
+	  });
+	} else if (os.type().includes('Linux')) {
+	  const cmd = 'firefox -v';
+	  exec(cmd, function (error, stdout, stderr) {
+		if (error) {
+		  console.log(error);
+		}
+		if (stderr) {
+		  console.log(stderr);
+		}
+		let firefoxVersion = stdout;
+		firefoxVersion = firefoxVersion.replace('Mozilla Firefox ', '');
+		callback(firefoxVersion);
+	  });
+	}
+  }
+  function getFirefoxDriverVersion(chromeMainVersion, callback) {
+	let version = parseInt(chromeMainVersion);
+	let fVersionForGecko = '';
+	if (version >= 52 && version <= 62) {
+	  fVersionForGecko = '0.20.1';
+	  callback(fVersionForGecko);
+	} else if (version >= 57 && version < 60) {
+	  fVersionForGecko = '0.25.0';
+	  callback(fVersionForGecko);
+	} else if (version >= 60) {
+	  fVersionForGecko = '0.26.0';
+	  callback(fVersionForGecko);
+	} else {
+	  callback(fVersionForGecko);
+	}
+  }
+  
+  function updateGeckodriver(platform,callback) {
+	let geckoPath;
+	let totalBytes;
+	let fileName = '';
+	let url;
+	if (platform === 'win32') {
+	  fileName = arch === 'x64' ? '-win64.zip' : '-win32.zip';
+	} else if (platform === 'darwin') {
+	  fileName = '-macos.tar.gz';
+	} else {
+	  fileName = arch === 'x64' ? '-linux64.tar.gz' : '-linux32.tar.gz';
+	}
+	let req;
+	request('https://www.google.com', function (err) {
+	  if (err) {
+		console.log('Your internet connection is not active');
+		callback(false);
+	  } else {
+		getFirefoxVersionDTL(function a(res) {
+		  if (res !== '') {
+			let firefoxMainVersion = parseInt(res);
+			console.log('Your Current Firefox Version :: ' + firefoxMainVersion);
+			getFirefoxDriverVersion(firefoxMainVersion, function a(getFirefoxVersion) {
+			  console.log('Compitable Gecko version  :: ' + getFirefoxVersion.trim());
+			  url = 'https://github.com/mozilla/geckodriver/releases/download' + '/v' + getFirefoxVersion.trim() + '/geckodriver-v' + getFirefoxVersion.trim() + fileName;
+			  let downloadFolder = homedir;
+			  fileName = 'geckodriver-v' + getFirefoxVersion.trim() + fileName;
+			  console.log("URL to Download :: " + url + ' \nDownload directory :: ' + `${downloadFolder}/${fileName}`);
+			  const file = fs.createWriteStream(`${downloadFolder}/${fileName}`);
+			  return new Promise(resolve => {
+				let receivedBytes = 0;
+				let previuosPercent = 0;
+				req = httpR.get(url, (response) => {
+				  if (response.statusCode !== 200) {
+					console.log('Response status was ', response);
+					callback(false);
+				  }
+				  totalBytes = response.headers['content-length'];
+				  // progress.report({ increment: 0 });
+				  response.on('data', (chunk) => {
+					receivedBytes += chunk.length;
+					const percent = ((receivedBytes / totalBytes) * 100);
+					let message = 'updating driver....';
+					if ((percent - previuosPercent) > 10 || percent === 100) {
+					  if (percent === 100) {
+						if (os.type().includes('Windows')) {
+						  decompress(downloadFolder + '\\' + fileName, downloadFolder).then(files => {
+							exec('del /f ' + downloadFolder + '\\' + fileName);
+							console.log('\nQAS firefox driver updated successfully');
+							callback(true);
+						  });
+						} else {
+						  decompress(downloadFolder + '/' + fileName, downloadFolder).then(files => {
+							exec('rm -rf ' + downloadFolder + '/' + fileName);
+							console.log('\nQAS firefox driver updated successfully');
+							callback(true);
+						  });
+						}
+					  } else {
+						message = 'updating....';
+					  }
+					  previuosPercent = percent;
+					}
+				  });
+				  response.pipe(file);
+				  response.on('error', (err) => {
+					fs.unlink(`${downloadFolder}/${fileName}`, (err) => {
+					  if (err) {
+						throw err;
+					  }
+					  console.log('Inside Download : successfully deleted file');
+					  resolve();
+					});
+				  });
+				  file.on('finish', () => {
+					file.close();
+					resolve();
+				  });
+				  file.on('error', (err) => {
+					fs.unlink(`${downloadFolder}/${fileName}`, (err) => {
+					  if (err) {
+						throw err;
+					  }
+					  console.log('Inside File Write :  successfully deleted file');
+					  resolve();
+					});
+				  });
+				});
+			  });
+			});
+		  } else {
+			console.log('Mozila firefox not found in your system.');
+			callback(false);
+		  }
+		});
+	  }
+	});
+  }
