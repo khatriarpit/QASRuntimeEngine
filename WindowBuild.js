@@ -332,15 +332,16 @@ function gitCheckoutWithInquer(cmdPerform, path,drivername) {
 				}
 				if(isValid){
 					if (framework === 'robot') {
-						// var robotWeburl = path + "/tests/web";
-						// var robotMobUrl = path + "/tests/mobileweb";
-						// if (checkDirectorySync(robotWeburl)) {
-						// 	isweb = true;
-						// }
-						// if (checkDirectorySync(robotMobUrl)) {
-						// 	isMob = true;
-						// }
-						// if (isMob && isweb) {
+						var isMob=false,isweb=false; 
+						var robotWeburl = path + "/tests/web";
+						var robotMobUrl = path + "/tests/mobileweb";
+						if (checkDirectorySync(robotWeburl)) {
+							isweb = true;
+						}
+						if (checkDirectorySync(robotMobUrl)) {
+							isMob = true;
+						}
+						if (isMob || isweb) {
 							checkPythonTagExist(path+"/tests/", function a(response) {
 								if (!response ) {
 										console.log("QAS CLI requires to update your project using QAS import project menu.");
@@ -350,10 +351,10 @@ function gitCheckoutWithInquer(cmdPerform, path,drivername) {
 									executePythonExtraCommand(exports.projectPath,framework,language,drivername);
 								}
 							});
-						// }else{
-						// 	console.log('No tests available to run .');
-						// 	doYouWantToExit();
-						// }
+						}else{
+							console.log('No tests available to run .');
+							doYouWantToExit();
+						}
 				} else {
 					if(checkEnviornmentDriverName(exports.projectPath,drivername,framework)){
 							if(checkExistingPlatform(exports.projectPath)){
@@ -461,11 +462,11 @@ function gitCheckoutWithInquer(cmdPerform, path,drivername) {
 				gitCheckout(drivername);
 			}
 				} else {
-					console.log("Something wrong in your license configuration ,please update your project by reimport in QAS");
+					console.log("Project import required to continue !!!,  Please do it as certain functionality will not work.");
 					gitCheckout(drivername);
 				}
 			}else{
-				console.log("Something wrong in your project configuration ,please update your project by reimport in QAS");
+				console.log("Project import required to continue !!!,  Please do it as certain functionality will not work.");
 				gitCheckout(drivername);
 			}
         }else{
@@ -558,6 +559,18 @@ function checkoutFromLocalRepository(drivername) {
 						}
 						if(isValid){
 							if (framework === 'robot') {
+								var isMob=false,isweb=false; 
+								// checkPythonInstalled(exports.projectPath);
+								var robotWeburl = path + "/tests/web";
+								var robotMobUrl = path + "/tests/mobileweb";
+								if (checkDirectorySync(robotWeburl)) {
+									isweb = true;
+								}
+								if (checkDirectorySync(robotMobUrl)) {
+									isMob = true;
+								}
+								
+								if (isMob || isweb) {
 									checkPythonTagExist(path+"/tests/", function a(response) {
 										if (!response ) {
 												console.log("QAS CLI requires to update your project using QAS import project menu.");
@@ -567,11 +580,17 @@ function checkoutFromLocalRepository(drivername) {
 											executePythonExtraCommand(path,framework,language,drivername);
 										}
 									});
+								}else{
+									console.log('No tests available to run .');
+									doYouWantToExit();
+								}
 								// doJavaScriptExecution(path, framework, language);
 							} else {
 							if(checkEnviornmentDriverName(exports.projectPath,drivername,framework)){
 								if(checkExistingPlatform(path)){
+									console.log("Calling Python properties");
 									changePythonBehaveProperties(path, true,drivername);
+									console.log("Calling Python properties Finished");
 									executePythonExtraCommand(path,framework,language,drivername);
 									// doJavaScriptExecution(path, framework, language);
 								}else{
@@ -677,11 +696,11 @@ function checkoutFromLocalRepository(drivername) {
 					checkoutFromLocalRepository(drivername);
 				}
 				}else{
-					console.log("Something wrong in your license configuration ,please update your project by reimport in QAS");
+					console.log("Project import required to continue !!!,  Please do it as certain functionality will not work.");
 					checkoutFromLocalRepository(drivername);
 				}
 				}else{
-					console.log("Something wrong in your project configuration ,please update your project by reimport in QAS");
+					console.log("Project import required to continue !!!,  Please do it as certain functionality will not work.");
 					checkoutFromLocalRepository(drivername);
 				}
 				} else {
@@ -770,13 +789,13 @@ function doJavaScriptExecution(path, framework, language,drivername) {
 						console.log("You can not update driver because firefox binary installed in your system..");
 						doYouWantToExit();
 					} else {
-					  console.log('Compitable Driver Version :: ' + resp)
+					  console.log('Compatible Driver Version :: ' + resp)
 					  if (parseFloat(result.toString().split(" ")[1]) === parseFloat(resp)) {
-						console.log("Your Driver match with latest Compitable driver.");
+						console.log("Your Driver match with latest Compatible driver.");
 						process.chdir(path);
 						askForScheduling(path,cPath,language,framework,drivername);
 					  } else {
-						console.log("Your Driver Not match with latest Compitable driver,\n updating Please wait..");
+						console.log("Your Driver Not match with latest Compatible driver,\n updating Please wait..");
 						updateGeckodriver(process.platform,function a(res){
 							if (res) {
 								process.chdir(path);
@@ -826,13 +845,13 @@ function doJavaScriptExecution(path, framework, language,drivername) {
 				  if (result.toString().toLowerCase().indexOf('chromedriver') !== -1) {
 					console.log('Your current driver version :: ' + result.toString().split(" ")[1]);
 					getCurrentChromedriverVersion(function (resp) {
-					  console.log('Compitable Driver Version :: ' + resp)
+					  console.log('Compatible Driver Version :: ' + resp)
 					  if (parseFloat(result.toString().split(" ")[1]) === parseFloat(resp)) {
-						console.log("Your Driver match with latest compitable driver.");
+						console.log("Your Driver match with latest Compatible driver.");
 						process.chdir(path);
 						askForScheduling(path, cPath, language, framework, drivername);
 					  } else {
-						console.log("Your Driver Not match with latest Compitable driver,\n updating Please wait..");
+						console.log("Your Driver Not match with latest Compatible driver,\n updating Please wait..");
 						updateChromedriver(process.platform,function a(re){
 							process.chdir(path);
 							askForScheduling(path, cPath, language, framework, drivername);
@@ -1432,13 +1451,20 @@ function getJavaVersion(callback) {
 	});
 	spawn.on('close', function (data) {
 		data = result.toString().split('\n')[0].split('\r')[0];
-		var javaVersion = new RegExp('java version').test(data) ? data.split(' ')[2].replace(/"/g, '') : false;
-		if (javaVersion !== false) {
-			return callback(null, javaVersion);
+		//var javaVersion = new RegExp('java version').test(data) ? data.split(' ')[2].replace(/"/g, '') : false;
+	/* 	var javaVersion = '';
+
+		if(data.indexOf('openjdk') > -1) {
+            javaVersion=new RegExp('openjdk version').test(data) ? data.split(' ')[2].replace(/"/g, '') : false;
+        }else{
+            javaVersion=new RegExp('java version').test(data) ? data.split(' ')[2].replace(/"/g, '') : false;
+        } */
+		if (data) {
+			return callback(null, data);
 		} else {
 			return callback(null, null);
 		}
-
+	
 	});
 }
 exports.getJavaVersion = getJavaVersion;
@@ -2117,7 +2143,7 @@ function executeCiCdComandJavaAndPython(path, chromePath, framework, language, d
 			exports.defaultInstance = require('child_process').execFile(exports.path);
 			commandLineDriver = ' -Dwebdriver.chrome.driver='  + "\""+chromePath+"\"";
 		}
-		var listOFCommands = ["mvn clean test", "mvn test", "mvn site", "mvn clean test & mvn site","mvn test & mvn site", "mvn clean test ; mvn site"];
+		var listOFCommands = ["mvn clean test","mvn clean site", "mvn test", "mvn site", "mvn clean test & mvn site","mvn test & mvn site", "mvn clean test ; mvn site" ,"mvn clean test & mvn clean site","mvn clean test : mvn clean site"];
 		var result = listOFCommands.findIndex(item => cmdJavaScript.toLowerCase() === item.toLowerCase());
 		if (result > -1) {
 			exports.isValidCommand=true;
@@ -2125,13 +2151,14 @@ function executeCiCdComandJavaAndPython(path, chromePath, framework, language, d
 				var commandForExecution="";
 				if(cmdJavaScript.toLowerCase().indexOf('test') > -1  && cmdJavaScript.toLowerCase().indexOf('site') > -1){
 					commandForExecution='mvn  -Dtest=tests.web.*.*Test,tests.mobileweb.*.*Test -DfailIfNoTests=false' + commandLineDriver + " test & mvn  -Dtest=tests.web.*.*Test,tests.mobileweb.*.*Test -DfailIfNoTests=false " + commandLineDriver + " site" ;
-				}else if(cmdJavaScript.toLowerCase().indexOf('test') ){
+				}else if(cmdJavaScript.toLowerCase().indexOf('test') > -1){
 					commandForExecution='mvn  -Dtest=tests.web.*.*Test,tests.mobileweb.*.*Test -DfailIfNoTests=false' + commandLineDriver + " test";
-				}else if(cmdJavaScript.toLowerCase().indexOf('site') ){
+				}else if(cmdJavaScript.toLowerCase().indexOf('site') > -1){
 					commandForExecution='mvn  -Dtest=tests.web.*.*Test,tests.mobileweb.*.*Test -DfailIfNoTests=false ' + commandLineDriver + " site";
 				}else{
 				}
 				// if (cmdJavaScript.toLowerCase().indexOf('test') > -1) {
+					console.log('>>>>>>>>>>>>>>>>>'+commandForExecution);
 					shell.exec(commandForExecution, function (code, stdout, stderr) {
 						if (stderr) {
 							revertModificationOfheadless(framework, language, drivername);
@@ -2224,26 +2251,26 @@ function executeCiCdComandJavaAndPython(path, chromePath, framework, language, d
 			}
 			if (isValidPythonCmd) {
 				exports.isValidCommand=true;
-				// var isweb = false;
-				// var isMob = false;
-				// var robotWeburl = path + "/tests/web";
-				// var robotMobUrl = path + "/tests/mobileweb";
-				// if (checkDirectorySync(path + "/tests/web")) {
-				// 	isweb = true;
+				var isweb = false;
+				var isMob = false;
+				var robotWeburl = path + "/tests/web";
+				var robotMobUrl = path + "/tests/mobileweb";
+				if (checkDirectorySync(path + "/tests/web")) {
+					isweb = true;
 
-				// } else {
-				// 	robotWeburl = '';
-				// }
-				// if (checkDirectorySync(path + "/tests/mobileweb")) {
-				// 	isMob = true;
-				// } else {
-				// 	robotMobUrl = '';
-				// }
-				// if (!isMob && !isweb) {
-				// 	console.log('No tests available to run .');
-				// 	exports.isChanged=false;
-				// 	doYouWantToExitWithOptions(path, chromePath, framework, language);
-				// } else {
+				} else {
+					robotWeburl = '';
+				}
+				if (checkDirectorySync(path + "/tests/mobileweb")) {
+					isMob = true;
+				} else {
+					robotMobUrl = '';
+				}
+				if (!isMob && !isweb) {
+					console.log('No tests available to run .');
+					exports.isChanged=false;
+					doYouWantToExitWithOptions(path, chromePath, framework, language);
+				} else {
 					shell.exec("robot " + upload + ' --include=webmobile tests', function (code, stdout, stderr) {
 						if (stderr) {
 							revertModificationOfheadless(framework, language, drivername);
@@ -2267,7 +2294,7 @@ function executeCiCdComandJavaAndPython(path, chromePath, framework, language, d
 							});
 						}
 					});
-				// }
+				}
 			}
 		} else {
 			if (cmdJavaScript.indexOf('behave') <= -1) {
@@ -2833,7 +2860,7 @@ function getCurrentChromedriverVersion(callback) {
 		let chromeMainVersion = res.split('.')[0];
 		// console.log('Your Current Chrome Version :: ' + res);
 		getChromeDriverVersion(chromeMainVersion, function a(googleChromeVersion) {
-		  // console.log('Compitable Chrome Version :: ' + googleChromeVersion.body.trim());
+		  // console.log('Compatible Chrome Version :: ' + googleChromeVersion.body.trim());
 		  callback(googleChromeVersion.body.trim());
 		});
 	  });
@@ -2875,7 +2902,7 @@ function getCurrentChromedriverVersion(callback) {
 			let chromeMainVersion = res.split('.')[0];
 			console.log('Your Current Chrome Version :: ' + res);
 			getChromeDriverVersion(chromeMainVersion, function a(googleChromeVersion) {
-			  console.log('Compitable Chrome Version :: ' + googleChromeVersion.body.trim());
+			  console.log('Compatible Chrome Version :: ' + googleChromeVersion.body.trim());
 			  url = 'https://chromedriver.storage.googleapis.com/' + googleChromeVersion.body.trim() + '/' + fileName;
 			  //We have to give download directory
 			  // let downloadFolder = path.parse(chromePath + '').dir;
@@ -3050,7 +3077,7 @@ function getCurrentChromedriverVersion(callback) {
 			let firefoxMainVersion = parseInt(res);
 			console.log('Your Current Firefox Version :: ' + firefoxMainVersion);
 			getFirefoxDriverVersion(firefoxMainVersion, function a(getFirefoxVersion) {
-			  console.log('Compitable Gecko version  :: ' + getFirefoxVersion.trim());
+			  console.log('Compatible Gecko version  :: ' + getFirefoxVersion.trim());
 			  url = 'https://github.com/mozilla/geckodriver/releases/download' + '/v' + getFirefoxVersion.trim() + '/geckodriver-v' + getFirefoxVersion.trim() + fileName;
 			  let downloadFolder = homedir;
 			  fileName = 'geckodriver-v' + getFirefoxVersion.trim() + fileName;
