@@ -846,6 +846,17 @@ function doJavaScriptExecution(path, framework, language,drivername) {
 					console.log('Your current driver version :: ' + result.toString().split(" ")[1]);
 					getCurrentChromedriverVersion(function (resp) {
 					  console.log('Compatible Driver Version :: ' + resp)
+					  if (resp === undefined) {
+						console.log('Something wrong in driver version check .Please try again later .');
+						doYouWantToExit();
+					}else if(resp === 'errorConnect'){
+						console.log('errorConnect : Currently unable to check driver compatible version. Please try again later');
+						doYouWantToExit();
+					}
+					else if (resp === '') {
+						console.log('You can not update driver because chrome binary is not installed in your system..');
+						doYouWantToExit();
+					} else {
 					  if (parseFloat(result.toString().split(" ")[1]) === parseFloat(resp)) {
 						console.log("Your Driver match with latest Compatible driver.");
 						process.chdir(path);
@@ -857,6 +868,7 @@ function doJavaScriptExecution(path, framework, language,drivername) {
 							askForScheduling(path, cPath, language, framework, drivername);
 						})
 					  }
+					}
 					});
 				  } else {
 					updateChromedriver(process.platform,function a(re){
@@ -2158,7 +2170,6 @@ function executeCiCdComandJavaAndPython(path, chromePath, framework, language, d
 				}else{
 				}
 				// if (cmdJavaScript.toLowerCase().indexOf('test') > -1) {
-					console.log('>>>>>>>>>>>>>>>>>'+commandForExecution);
 					shell.exec(commandForExecution, function (code, stdout, stderr) {
 						if (stderr) {
 							revertModificationOfheadless(framework, language, drivername);
@@ -2854,17 +2865,19 @@ function filewalker(dir, done) {
     });
 }
 
-function getCurrentChromedriverVersion(callback) {
+  function getCurrentChromedriverVersion(callback) {
 	getChromeVersion()
-	  .then((res) => {
-		let chromeMainVersion = res.split('.')[0];
-		// console.log('Your Current Chrome Version :: ' + res);
-		getChromeDriverVersion(chromeMainVersion, function a(googleChromeVersion) {
-		  // console.log('Compatible Chrome Version :: ' + googleChromeVersion.body.trim());
-		  callback(googleChromeVersion.body.trim());
+		.then((res) => {
+			if (res === undefined || res === null) {
+				callback('');
+			} else {
+				let chromeMainVersion = res.split('.')[0];
+				getChromeDriverVersion(chromeMainVersion, function a(googleChromeVersion) {
+					callback(googleChromeVersion !== ''?googleChromeVersion.body:'errorConnect');
+				});
+			}
 		});
-	  });
-  }
+}
   
   function getChromeDriverVersion(chromeMainVersion, callback) {
 	// console.log('APi to call' + 'https://chromedriver.storage.googleapis.com/LATEST_RELEASE_' + chromeMainVersion);
@@ -2875,7 +2888,21 @@ function getCurrentChromedriverVersion(callback) {
 	  }
 	};
 	request(options, function (error, response) {
-	  callback(response);
+		if (error) {
+			console.log('Error from Checking Chrome version from site'+error);
+			callback('');
+		}
+		else{
+		if(response === undefined || response === null || response === ''){
+			callback('');
+		}else{
+			if(response.statusCode ===200){
+				callback(response);
+			}else{
+				callback('');
+			}
+		}
+	}
 	});
   }
 
@@ -2902,12 +2929,17 @@ function getCurrentChromedriverVersion(callback) {
 			let chromeMainVersion = res.split('.')[0];
 			console.log('Your Current Chrome Version :: ' + res);
 			getChromeDriverVersion(chromeMainVersion, function a(googleChromeVersion) {
-			  console.log('Compatible Chrome Version :: ' + googleChromeVersion.body.trim());
+			  if (googleChromeVersion === '' || googleChromeVersion === undefined || googleChromeVersion === 'errorConnect') {
+				console.log('errorConnect : Currently unable to download driver compatible version. Please try again later');
+				callback(false);
+			} else {
+				console.log('Compatible Chrome Version :: ' + googleChromeVersion.body);
 			  url = 'https://chromedriver.storage.googleapis.com/' + googleChromeVersion.body.trim() + '/' + fileName;
 			  //We have to give download directory
 			  // let downloadFolder = path.parse(chromePath + '').dir;
 			  let downloadFolder = homedir;
-			  console.log("URL to Download :: " + url + '\nDownload directory :: ' + `${downloadFolder}`);
+			//   console.log("URL to Download :: " + url + '\nDownload directory :: ' + `${downloadFolder}`);
+			  	console.log("URL to Download :: " + url );
 			  const file = fs.createWriteStream(`${downloadFolder}/${fileName}`);
 			  return new Promise(resolve => {
 				let receivedBytes = 0;
@@ -2971,6 +3003,7 @@ function getCurrentChromedriverVersion(callback) {
 				  });
 				});
 			  });
+			}
 			});
 		  });
 	  }
