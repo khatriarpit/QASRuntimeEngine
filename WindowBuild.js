@@ -2957,20 +2957,6 @@ function filewalker(dir, done) {
 					let message = 'updating chromedriver....';
 					if ((percent - previuosPercent) > 10 || percent === 100) {
 					  if (percent === 100) {
-						if (os.type().includes('Windows')) {
-						  decompress(downloadFolder + '\\' + fileName, downloadFolder).then(files => {
-							exec('del /f ' + downloadFolder + '\\' + fileName);
-							console.log('\nQAS Chrome driver updated successfully');
-							callback(true);
-						  });
-						} else {
-						  decompress(downloadFolder + '/' + fileName, downloadFolder).then(files => {
-							exec('rm -rf ' + downloadFolder + '/' + fileName);
-							console.log('\nQAS Chrome driver updated successfully');
-							callback(true);
-						  });
-  
-						}
 					  } else {
 						message = 'updating....';
 					  }
@@ -2981,27 +2967,42 @@ function filewalker(dir, done) {
 				  response.on('error', (err) => {
 					fs.unlink(`${downloadFolder}/${fileName}`, (err) => {
 					  if (err) {
-						throw err;
+						console.log('Error ::'+err);
 					  }
-					  console.log('Inside Download : successfully deleted file');
 					  resolve();
 					});
 				  });
 				  file.on('finish', () => {
 					file.close();
+					if (os.type().includes('Windows')) {
+						decompress(downloadFolder + '\\' + fileName, downloadFolder).then(files => {
+						  exec('del /f ' + downloadFolder + '\\' + fileName);
+						  console.log('\nQAS Chrome driver updated successfully');
+						  callback(true);
+						});
+					  } else {
+						decompress(downloadFolder + '/' + fileName, downloadFolder).then(files => {
+						  exec('rm -rf ' + downloadFolder + '/' + fileName);
+						  console.log('\nQAS Chrome driver updated successfully');
+						  callback(true);
+						});
+
+					  }
 					resolve();
 				  });
 				  file.on('error', (err) => {
 					fs.unlink(`${downloadFolder}/${fileName}`, (err) => {
 					  if (err) {
-						throw err;
+						console.log('Error :: '+err);
 					  }
-					  console.log('Inside File Write :  successfully deleted file');
 					  resolve();
 					});
   
 				  });
 				});
+			  }).catch((err) => {
+				Console.log("Unable to download Chrome Driver .." +err);
+				resolve();
 			  });
 			}
 			});
@@ -3132,19 +3133,7 @@ function filewalker(dir, done) {
 					let message = 'updating driver....';
 					if ((percent - previuosPercent) > 10 || percent === 100) {
 					  if (percent === 100) {
-						if (os.type().includes('Windows')) {
-						  decompress(downloadFolder + '\\' + fileName, downloadFolder).then(files => {
-							exec('del /f ' + downloadFolder + '\\' + fileName);
-							console.log('\nQAS firefox driver updated successfully');
-							callback(true);
-						  });
-						} else {
-						  decompress(downloadFolder + '/' + fileName, downloadFolder).then(files => {
-							exec('rm -rf ' + downloadFolder + '/' + fileName);
-							console.log('\nQAS firefox driver updated successfully');
-							callback(true);
-						  });
-						}
+					
 					  } else {
 						message = 'updating....';
 					  }
@@ -3155,26 +3144,42 @@ function filewalker(dir, done) {
 				  response.on('error', (err) => {
 					fs.unlink(`${downloadFolder}/${fileName}`, (err) => {
 					  if (err) {
-						throw err;
+						console.log('Error ::'+err);
 					  }
-					  console.log('Inside Download : successfully deleted file');
+				//	  console.log('Inside Download : successfully deleted file');
 					  resolve();
 					});
 				  });
 				  file.on('finish', () => {
 					file.close();
+					if (os.type().includes('Windows')) {
+						decompress(downloadFolder + '\\' + fileName, downloadFolder).then(files => {
+						  exec('del /f ' + downloadFolder + '\\' + fileName);
+						  console.log('\nQAS firefox driver updated successfully');
+						  callback(true);
+						});
+					  } else {
+						decompress(downloadFolder + '/' + fileName, downloadFolder).then(files => {
+						  exec('rm -rf ' + downloadFolder + '/' + fileName);
+						  console.log('\nQAS firefox driver updated successfully');
+						  callback(true);
+						});
+					  }
 					resolve();
 				  });
 				  file.on('error', (err) => {
 					fs.unlink(`${downloadFolder}/${fileName}`, (err) => {
 					  if (err) {
-						throw err;
+						// console.log('Error ::'+err);
 					  }
-					  console.log('Inside File Write :  successfully deleted file');
+					//   console.log('Inside File Write :  successfully deleted file');
 					  resolve();
 					});
 				  });
 				});
+			  }).catch((err) => {
+				Console.log("Unable to download Gecko Driver .." +err);
+				resolve();
 			  });
 			});
 		  } else {
